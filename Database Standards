@@ -1,0 +1,401 @@
+# Database Standards
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Database Platform:** PostgreSQL 16+
+**ORM:** Django ORM
+**Status:** Enterprise Database Standard
+
+---
+
+# 1. Purpose
+
+เอกสารนี้กำหนดมาตรฐานการออกแบบ พัฒนา และดูแลฐานข้อมูลของ ECOS เพื่อให้ทุกโมดูลมีรูปแบบเดียวกัน รองรับการเติบโตของระบบ และลดความซับซ้อนในการบำรุงรักษา
+
+วัตถุประสงค์
+
+* สร้างมาตรฐานเดียวกันทั้งระบบ
+* รองรับการพัฒนาแบบ Modular Monolith และ Microservices
+* เพิ่มประสิทธิภาพของฐานข้อมูล
+* ลดความเสี่ยงจากการออกแบบที่ไม่สอดคล้องกัน
+
+---
+
+# 2. General Principles
+
+* Database-agnostic ในระดับ Domain
+* PostgreSQL เป็นฐานข้อมูลหลัก
+* ใช้ UUID เป็น Primary Key
+* ใช้ UTC สำหรับข้อมูลวันเวลา
+* สนับสนุน Soft Delete
+* รองรับ Versioning ของข้อมูล
+* ใช้ JSONB เฉพาะข้อมูลที่มีโครงสร้างยืดหยุ่น
+* ทุกการเปลี่ยนแปลงต้องผ่าน Migration
+
+---
+
+# 3. Naming Standards
+
+## Tables
+
+* ใช้ **snake_case**
+* ใช้ **พหูพจน์ (Plural)**
+
+ตัวอย่าง
+
+```text id="tblstd"
+users
+organizations
+courses
+lessons
+generation_jobs
+```
+
+---
+
+## Columns
+
+* ใช้ **snake_case**
+* ชื่อสื่อความหมายชัดเจน
+
+ตัวอย่าง
+
+```text id="colstd"
+organization_id
+created_at
+updated_at
+resource_type
+```
+
+---
+
+## Primary Keys
+
+ทุกตารางใช้
+
+```text id="pkstd"
+id UUID
+```
+
+---
+
+## Foreign Keys
+
+รูปแบบ
+
+```text id="fkstd"
+<entity>_id
+```
+
+ตัวอย่าง
+
+* user_id
+* lesson_id
+* course_id
+
+---
+
+## Index Names
+
+รูปแบบ
+
+```text id="idxstd"
+idx_<table>_<column>
+
+uq_<table>_<column>
+
+fk_<table>_<reference>
+
+ck_<table>_<rule>
+```
+
+ตัวอย่าง
+
+```text id="idxex"
+idx_lessons_unit_id
+
+uq_users_email
+
+fk_lessons_units
+
+ck_version_positive
+```
+
+---
+
+# 4. Data Type Standards
+
+| Logical Type | PostgreSQL  | Django        |
+| ------------ | ----------- | ------------- |
+| Identifier   | UUID        | UUIDField     |
+| Short Text   | varchar     | CharField     |
+| Long Text    | text        | TextField     |
+| Boolean      | boolean     | BooleanField  |
+| Integer      | integer     | IntegerField  |
+| Decimal      | numeric     | DecimalField  |
+| Date         | date        | DateField     |
+| DateTime     | timestamptz | DateTimeField |
+| JSON         | jsonb       | JSONField     |
+
+---
+
+# 5. Mandatory Columns
+
+ทุก Business Table ต้องมี
+
+| Column     | Type                   |
+| ---------- | ---------------------- |
+| id         | UUID                   |
+| created_at | timestamptz            |
+| updated_at | timestamptz            |
+| created_by | UUID                   |
+| updated_by | UUID                   |
+| version    | integer                |
+| deleted_at | timestamptz (nullable) |
+
+---
+
+# 6. Constraints
+
+ใช้
+
+* PRIMARY KEY
+* FOREIGN KEY
+* UNIQUE
+* CHECK
+* NOT NULL
+
+ตัวอย่าง
+
+```text id="ckex"
+version >= 1
+
+sequence > 0
+
+duration_minutes > 0
+```
+
+---
+
+# 7. Index Standards
+
+Primary Index
+
+* Primary Key ทุกตาราง
+
+Secondary Index
+
+* Foreign Key
+* status
+* created_at
+* updated_at
+
+Composite Index
+
+* organization_id + status
+* course_id + sequence
+* lesson_id + version
+
+GIN Index
+
+* JSONB
+* Full Text Search
+
+---
+
+# 8. JSONB Standards
+
+ใช้ JSONB สำหรับ
+
+* metadata
+* prompt
+* ai_response
+* plugin_manifest
+* rubric_schema
+
+ไม่ใช้ JSONB แทนข้อมูลเชิงสัมพันธ์ที่ควรแยกเป็นตาราง
+
+---
+
+# 9. Versioning Standards
+
+Published Data
+
+* แก้ไขโดยตรงไม่ได้
+* สร้าง Revision ใหม่
+
+Version
+
+* เริ่มต้นที่ 1
+* เพิ่มขึ้นทีละ 1
+
+---
+
+# 10. Soft Delete Standards
+
+ใช้คอลัมน์
+
+```text id="softdel"
+deleted_at
+```
+
+ข้อมูลที่ถูกลบยังคงอยู่ในฐานข้อมูลจนกว่าจะผ่านกระบวนการ Purge ตามนโยบายการเก็บรักษาข้อมูล
+
+---
+
+# 11. Migration Standards
+
+ทุกการเปลี่ยนแปลงต้อง
+
+1. สร้าง Migration
+2. ตรวจสอบ Migration
+3. ทดสอบ Migration
+4. Deploy
+5. ตรวจสอบผลหลัง Deploy
+
+ห้ามแก้ไข Migration ที่ใช้งานใน Production แล้ว
+
+---
+
+# 12. Transaction Standards
+
+* ใช้ Transaction สำหรับการเปลี่ยนแปลงหลายตาราง
+* Rollback เมื่อเกิดข้อผิดพลาด
+* หลีกเลี่ยง Transaction ที่ใช้เวลานาน
+
+---
+
+# 13. Concurrency Standards
+
+ใช้
+
+* Optimistic Locking ผ่านฟิลด์ `version`
+* Row Lock (`SELECT ... FOR UPDATE`) เมื่อจำเป็น
+* หลีกเลี่ยง Deadlock โดยกำหนดลำดับการล็อกข้อมูลให้สม่ำเสมอ
+
+---
+
+# 14. Security Standards
+
+* TLS สำหรับการเชื่อมต่อฐานข้อมูล
+* Encryption at Rest
+* Least Privilege
+* แยกบัญชีผู้ใช้สำหรับ Application, Migration และ Reporting
+* รองรับ Row-Level Security สำหรับ Enterprise Edition
+
+---
+
+# 15. Backup & Recovery Standards
+
+* Full Backup รายสัปดาห์
+* Incremental/Differential Backup รายวัน (ตามเครื่องมือที่ใช้)
+* Point-in-Time Recovery (PITR)
+* ทดสอบการกู้คืนข้อมูลเป็นประจำ
+* กำหนด Retention ตามนโยบายองค์กร
+
+---
+
+# 16. Performance Standards
+
+* วิเคราะห์ Query ด้วย `EXPLAIN ANALYZE`
+* กำหนด Index ตามรูปแบบการใช้งานจริง
+* ใช้ Pagination สำหรับข้อมูลจำนวนมาก
+* หลีกเลี่ยง N+1 Query (ใช้ `select_related` / `prefetch_related` ใน Django)
+* เก็บ Query ที่ใช้เวลานานเพื่อตรวจสอบและปรับปรุง
+
+---
+
+# 17. Partitioning Standards
+
+ใช้ Partition เมื่อข้อมูลมีขนาดใหญ่ เช่น
+
+* audit_logs
+* analytics_events
+* ai_generation_logs
+
+รูปแบบที่แนะนำ
+
+* Range Partition (ตามเดือนหรือปี)
+* Hash Partition (เมื่อมีข้อมูลกระจายสูง)
+
+---
+
+# 18. Archiving Standards
+
+ข้อมูลที่ไม่ใช้งานแล้ว
+
+* Archive ก่อน
+* Purge ตามนโยบายการเก็บรักษา
+
+ตัวอย่าง
+
+* Audit Log เก็บ 7 ปี
+* AI Job Log เก็บ 2 ปี
+* Temporary Export เก็บ 30 วัน
+
+---
+
+# 19. Monitoring Standards
+
+ติดตามตัวชี้วัด เช่น
+
+* Connection Count
+* Active Sessions
+* Slow Queries
+* Cache Hit Ratio
+* Disk Usage
+* Replication Lag
+* Lock Wait Time
+
+กำหนด Alert Threshold สำหรับแต่ละตัวชี้วัด
+
+---
+
+# 20. Database Lifecycle
+
+```text id="dblifecycle"
+Design
+   ↓
+Review
+   ↓
+Migration
+   ↓
+Testing
+   ↓
+Deployment
+   ↓
+Monitoring
+   ↓
+Optimization
+   ↓
+Archiving
+```
+
+---
+
+# 21. Documentation Standards
+
+ทุกการเปลี่ยนแปลงฐานข้อมูลต้องอัปเดต
+
+* Canonical Data Model
+* Physical ERD
+* Data Dictionary
+* Migration Notes
+* Architecture Decision Records (ADR)
+
+เพื่อให้เอกสารและระบบสอดคล้องกันเสมอ
+
+---
+
+# 22. Compliance Checklist
+
+ก่อนนำขึ้น Production ต้องตรวจสอบว่า
+
+* ใช้ UUID เป็น Primary Key
+* ตั้งชื่อ Table และ Column ตามมาตรฐาน
+* มี Foreign Key และ Constraint ครบถ้วน
+* มี Index ที่เหมาะสม
+* ผ่านการทดสอบ Migration
+* ผ่านการทดสอบ Performance
+* ผ่านการทดสอบ Backup และ Restore
+* อัปเดตเอกสารที่เกี่ยวข้องครบถ้วน
