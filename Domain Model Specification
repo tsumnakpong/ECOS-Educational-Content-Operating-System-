@@ -1,0 +1,686 @@
+# Domain Model Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Architecture Draft
+
+---
+
+# 1. Domain Overview
+
+ECOS เป็นแพลตฟอร์มสำหรับการจัดการวงจรชีวิตของทรัพยากรการเรียนรู้ (Learning Content Lifecycle)
+
+ระบบแบ่งออกเป็น 12 Bounded Context หลัก ซึ่งแต่ละ Context มีขอบเขตความรับผิดชอบและข้อมูลของตนเอง
+
+```text
+Identity
+Organization
+Curriculum
+Content
+Assessment
+AI Studio
+Template
+Plugin
+Marketplace
+Workflow
+Analytics
+Platform
+```
+
+---
+
+# 2. Core Domain
+
+Core Domain คือส่วนที่สร้างคุณค่าหลักของระบบ
+
+```
+Curriculum
+AI Studio
+Content
+Assessment
+```
+
+---
+
+# 3. Supporting Domains
+
+```
+Template
+
+Workflow
+
+Marketplace
+
+Analytics
+```
+
+---
+
+# 4. Generic Domains
+
+```
+Identity
+
+Notification
+
+Storage
+
+Configuration
+
+Localization
+
+Security
+```
+
+---
+
+# 5. Bounded Context
+
+## Identity Context
+
+รับผิดชอบ
+
+* User
+* Authentication
+* Roles
+* Permissions
+* Organizations
+
+Aggregate Root
+
+```
+User
+```
+
+Entities
+
+```
+User
+
+Role
+
+Permission
+
+Session
+
+Profile
+```
+
+---
+
+## Organization Context
+
+Aggregate Root
+
+```
+Organization
+```
+
+Entities
+
+```
+Organization
+
+School
+
+Department
+
+Team
+```
+
+---
+
+## Curriculum Context
+
+Aggregate Root
+
+```
+Course
+```
+
+Entities
+
+```
+Course
+
+Unit
+
+Lesson
+
+Learning Outcome
+
+Competency
+
+Standard
+
+Topic
+```
+
+Relationship
+
+```
+Course
+
+↓
+
+Units
+
+↓
+
+Lessons
+```
+
+---
+
+## Content Context
+
+Aggregate Root
+
+```
+Learning Resource
+```
+
+Entities
+
+```
+Knowledge Sheet
+
+Worksheet
+
+Activity
+
+Slide
+
+Image
+
+Video
+
+Document
+```
+
+ทุก Resource
+
+มี
+
+```
+Version
+
+Status
+
+Metadata
+```
+
+---
+
+## Assessment Context
+
+Aggregate Root
+
+```
+Assessment
+```
+
+Entities
+
+```
+Assessment
+
+Question
+
+Choice
+
+Answer
+
+Rubric
+
+Criteria
+
+Score
+
+Feedback
+```
+
+---
+
+## AI Studio Context
+
+Aggregate Root
+
+```
+Generation Job
+```
+
+Entities
+
+```
+Prompt
+
+Prompt Template
+
+Generation Job
+
+AI Model
+
+AI Provider
+
+Result
+
+History
+```
+
+Workflow
+
+```
+Generate
+
+↓
+
+Review
+
+↓
+
+Approve
+
+↓
+
+Export
+```
+
+---
+
+## Template Context
+
+Aggregate Root
+
+```
+Template
+```
+
+Entities
+
+```
+Worksheet Template
+
+Lesson Template
+
+Quiz Template
+
+Theme
+
+Layout
+
+Style
+```
+
+---
+
+## Plugin Context
+
+Aggregate Root
+
+```
+Plugin
+```
+
+Entities
+
+```
+Plugin
+
+Package
+
+Manifest
+
+Hook
+
+Extension
+
+Dependency
+```
+
+---
+
+## Marketplace Context
+
+Aggregate Root
+
+```
+Marketplace Item
+```
+
+Entities
+
+```
+Plugin
+
+Template
+
+Theme
+
+Bundle
+
+Review
+
+Rating
+```
+
+---
+
+## Workflow Context
+
+Aggregate Root
+
+```
+Workflow
+```
+
+Entities
+
+```
+State
+
+Transition
+
+Approval
+
+Comment
+
+Task
+```
+
+---
+
+## Analytics Context
+
+Aggregate Root
+
+```
+Analytics Report
+```
+
+Entities
+
+```
+Usage
+
+AI Usage
+
+Downloads
+
+Generation
+
+Performance
+
+Cost
+```
+
+---
+
+## Platform Context
+
+Aggregate Root
+
+```
+Platform Configuration
+```
+
+Entities
+
+```
+Configuration
+
+Localization
+
+Feature Flag
+
+Runtime
+
+Environment
+```
+
+---
+
+# 6. Aggregate Relationships
+
+```text
+Organization
+    └── School
+          └── Department
+
+User
+    └── Organization
+
+Course
+    └── Unit
+          └── Lesson
+                ├── Learning Resources
+                ├── Assessment
+                └── AI Generation Jobs
+
+Template
+    └── Generated Content
+
+Plugin
+    └── Extensions
+
+Marketplace
+    └── Plugin
+    └── Template
+
+Workflow
+    └── Content
+```
+
+---
+
+# 7. Shared Value Objects
+
+```
+Name
+
+Title
+
+Description
+
+Language
+
+Version
+
+Status
+
+Slug
+
+Tag
+
+Color
+
+Theme
+
+FileReference
+
+DateRange
+
+AuditInfo
+```
+
+Value Objects ไม่มี Identity และใช้ซ้ำได้ในหลาย Context
+
+---
+
+# 8. Common Enumerations
+
+ContentStatus
+
+```
+Draft
+
+Review
+
+Approved
+
+Published
+
+Archived
+```
+
+LessonType
+
+```
+Theory
+
+Activity
+
+Lab
+
+Project
+
+Assessment
+```
+
+GenerationStatus
+
+```
+Pending
+
+Running
+
+Completed
+
+Failed
+
+Cancelled
+```
+
+ExportFormat
+
+```
+DOCX
+
+PDF
+
+PPTX
+
+HTML
+
+Markdown
+```
+
+---
+
+# 9. Domain Events
+
+```
+CourseCreated
+
+LessonCreated
+
+WorksheetGenerated
+
+AssessmentGenerated
+
+PluginInstalled
+
+TemplatePublished
+
+ExportCompleted
+
+WorkflowApproved
+
+UserInvited
+
+OrganizationCreated
+```
+
+ทุก Event สามารถใช้กับ Event Bus และ Workflow Engine ได้
+
+---
+
+# 10. Domain Services
+
+```
+Curriculum Service
+
+Content Service
+
+Assessment Service
+
+Template Service
+
+Generation Service
+
+Export Service
+
+Workflow Service
+
+Plugin Service
+
+Analytics Service
+```
+
+Domain Service จะเก็บ Business Logic ที่ไม่เหมาะกับ Entity ใด Entity หนึ่ง
+
+---
+
+# 11. Repository Contracts
+
+ทุก Aggregate Root มี Repository ของตนเอง เช่น
+
+```
+CourseRepository
+
+LessonRepository
+
+AssessmentRepository
+
+TemplateRepository
+
+PluginRepository
+
+GenerationRepository
+```
+
+Repository ทำหน้าที่เข้าถึงข้อมูล โดยไม่ให้ Business Layer ผูกกับ ORM โดยตรง
+
+---
+
+# 12. Domain Rules
+
+* Lesson ต้องอยู่ภายใต้ Unit เสมอ
+* Unit ต้องอยู่ภายใต้ Course เสมอ
+* ทุก Learning Resource ต้องมี Version และ Metadata
+* Content ที่อยู่ในสถานะ Published ต้องแก้ไขโดยตรงไม่ได้ ต้องสร้าง Revision ใหม่
+* Plugin ต้องผ่านการตรวจสอบ Compatibility ก่อนติดตั้ง
+* AI Generation ทุกครั้งต้องถูกบันทึกเป็น Generation Job พร้อมประวัติการใช้งาน
+
+---
+
+# 13. Domain Layer Dependencies
+
+```
+Presentation
+        │
+Application
+        │
+Domain
+        │
+Infrastructure
+```
+
+Domain Layer ต้องไม่ขึ้นต่อ Framework, ORM หรือผู้ให้บริการ AI เพื่อให้สามารถทดสอบและนำกลับมาใช้ซ้ำได้
+
+---
+
+# 14. Future Extensions
+
+Domain Model ถูกออกแบบให้รองรับการเพิ่ม Context ใหม่ เช่น
+
+* Learning Analytics
+* AI Tutor
+* Student Portfolio
+* Research Repository
+* Certification
+* Digital Badge
+* Micro-Credentials
+* Adaptive Learning
+* Learning Path
+* Competency Tracking
