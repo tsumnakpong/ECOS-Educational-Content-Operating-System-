@@ -1,0 +1,317 @@
+# Data Dictionary Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Database:** PostgreSQL 16+
+**ORM:** Django ORM
+**Status:** Architecture Specification
+
+---
+
+# 1. Purpose
+
+Data Dictionary เป็นแหล่งอ้างอิงมาตรฐานสำหรับโครงสร้างข้อมูลทั้งหมดของ ECOS โดยกำหนดรายละเอียดของทุกตาราง ทุกคอลัมน์ และความสัมพันธ์ของข้อมูล เพื่อให้ทีมพัฒนา DBA QA และผู้พัฒนา API ใช้ข้อมูลชุดเดียวกัน
+
+---
+
+# 2. Data Dictionary Structure
+
+ข้อมูลของทุกตารางต้องมีรายละเอียดดังนี้
+
+| Field              | Description                 |
+| ------------------ | --------------------------- |
+| Table Name         | ชื่อตาราง                   |
+| Module             | โมดูลที่เป็นเจ้าของข้อมูล   |
+| Description        | คำอธิบายเชิงธุรกิจ          |
+| Column Name        | ชื่อคอลัมน์                 |
+| Data Type          | ชนิดข้อมูล                  |
+| Length / Precision | ความยาวหรือความละเอียด      |
+| Nullable           | อนุญาตให้เป็นค่าว่างหรือไม่ |
+| Default Value      | ค่าเริ่มต้น                 |
+| Primary Key        | เป็น Primary Key หรือไม่    |
+| Foreign Key        | อ้างอิงตารางใด              |
+| Unique             | มีข้อกำหนด Unique หรือไม่   |
+| Index              | มีดัชนีหรือไม่              |
+| Validation Rule    | กฎการตรวจสอบข้อมูล          |
+| Business Rule      | กฎทางธุรกิจ                 |
+| Example            | ตัวอย่างข้อมูล              |
+
+---
+
+# 3. Standard Data Types
+
+| Logical Type | PostgreSQL  | Django        |
+| ------------ | ----------- | ------------- |
+| Identifier   | UUID        | UUIDField     |
+| Short Text   | varchar     | CharField     |
+| Long Text    | text        | TextField     |
+| Boolean      | boolean     | BooleanField  |
+| Integer      | integer     | IntegerField  |
+| Decimal      | numeric     | DecimalField  |
+| Date         | date        | DateField     |
+| Date Time    | timestamptz | DateTimeField |
+| JSON         | jsonb       | JSONField     |
+| Binary       | bytea       | BinaryField   |
+
+---
+
+# 4. Example Table — users
+
+## Business Description
+
+จัดเก็บข้อมูลบัญชีผู้ใช้ของระบบ
+
+### Columns
+
+| Column          | Type         | Null | Key | Default            | Validation     | Description       |
+| --------------- | ------------ | ---- | --- | ------------------ | -------------- | ----------------- |
+| id              | UUID         | No   | PK  | uuid_generate_v4() | Required       | รหัสผู้ใช้        |
+| organization_id | UUID         | No   | FK  | -                  | Must Exist     | องค์กร            |
+| username        | varchar(150) | No   | UQ  | -                  | 3–150 ตัวอักษร | ชื่อผู้ใช้        |
+| email           | varchar(255) | No   | UQ  | -                  | Email Format   | อีเมล             |
+| password_hash   | text         | No   | -   | -                  | Encrypted      | รหัสผ่านเข้ารหัส  |
+| is_active       | boolean      | No   | -   | TRUE               | Boolean        | สถานะการใช้งาน    |
+| created_at      | timestamptz  | No   | IDX | CURRENT_TIMESTAMP  | UTC            | วันที่สร้าง       |
+| updated_at      | timestamptz  | No   | IDX | CURRENT_TIMESTAMP  | UTC            | วันที่แก้ไขล่าสุด |
+
+Indexes
+
+* PK(id)
+* UQ(username)
+* UQ(email)
+* IDX(organization_id)
+
+---
+
+# 5. Example Table — courses
+
+## Business Description
+
+เก็บข้อมูลรายวิชา
+
+| Column          | Type         | Null | Key | Validation     | Description   |
+| --------------- | ------------ | ---- | --- | -------------- | ------------- |
+| id              | UUID         | No   | PK  | Required       | รหัสรายวิชา   |
+| organization_id | UUID         | No   | FK  | Must Exist     | องค์กรเจ้าของ |
+| code            | varchar(30)  | No   | UQ  | ไม่ซ้ำในองค์กร | รหัสรายวิชา   |
+| title           | varchar(255) | No   | -   | Required       | ชื่อรายวิชา   |
+| description     | text         | Yes  | -   | -              | คำอธิบาย      |
+| academic_year   | varchar(20)  | No   | -   | Required       | ปีการศึกษา    |
+| status          | smallint     | No   | IDX | Enum           | สถานะ         |
+
+Composite Unique
+
+* (organization_id, code)
+
+---
+
+# 6. Example Table — lessons
+
+| Column           | Type         | Null | Key | Description   |
+| ---------------- | ------------ | ---- | --- | ------------- |
+| id               | UUID         | No   | PK  | รหัสบทเรียน   |
+| unit_id          | UUID         | No   | FK  | หน่วยการเรียน |
+| title            | varchar(255) | No   | -   | ชื่อบทเรียน   |
+| lesson_type      | smallint     | No   | -   | ประเภท        |
+| duration_minutes | integer      | No   | -   | ระยะเวลา      |
+| objectives       | jsonb        | Yes  | -   | จุดประสงค์    |
+
+Composite Unique
+
+* (unit_id, sequence)
+
+---
+
+# 7. Enumerations
+
+## Content Status
+
+| Value | Description |
+| ----- | ----------- |
+| 0     | Draft       |
+| 1     | Review      |
+| 2     | Approved    |
+| 3     | Published   |
+| 4     | Archived    |
+
+## Lesson Type
+
+| Value | Description |
+| ----- | ----------- |
+| 1     | Theory      |
+| 2     | Activity    |
+| 3     | Laboratory  |
+| 4     | Project     |
+| 5     | Assessment  |
+
+## AI Job Status
+
+| Value | Description |
+| ----- | ----------- |
+| 0     | Pending     |
+| 1     | Running     |
+| 2     | Completed   |
+| 3     | Failed      |
+| 4     | Cancelled   |
+
+---
+
+# 8. Naming Standards
+
+## Tables
+
+Plural + snake_case
+
+ตัวอย่าง
+
+* users
+* organizations
+* courses
+* lessons
+* resources
+
+## Columns
+
+snake_case
+
+ตัวอย่าง
+
+* created_at
+* organization_id
+* lesson_type
+
+## Foreign Keys
+
+รูปแบบ
+
+```text id="4j9wzf"
+<entity>_id
+```
+
+ตัวอย่าง
+
+* user_id
+* lesson_id
+* course_id
+
+---
+
+# 9. Audit Columns
+
+ทุกตารางธุรกิจต้องมี
+
+| Column     | Type        |
+| ---------- | ----------- |
+| created_at | timestamptz |
+| updated_at | timestamptz |
+| created_by | UUID        |
+| updated_by | UUID        |
+| deleted_at | timestamptz |
+
+รองรับ Soft Delete และการตรวจสอบย้อนหลัง
+
+---
+
+# 10. Validation Standards
+
+ตัวอย่างกฎ
+
+* Email ต้องเป็นรูปแบบ RFC 5322
+* UUID ต้องเป็น Version 4 หรือ Version 7 ตามมาตรฐานที่เลือกใช้
+* Version ต้องมีค่ามากกว่าหรือเท่ากับ 1
+* Sequence ต้องมากกว่า 0
+* Status ต้องเป็นค่าที่กำหนดใน Enumeration
+
+---
+
+# 11. Index Standards
+
+Primary Index
+
+* Primary Key
+
+Secondary Index
+
+* Foreign Keys
+* created_at
+* updated_at
+* status
+
+Composite Index
+
+* organization_id + status
+* lesson_id + version
+* course_id + sequence
+
+GIN Index
+
+* JSONB
+* Full Text Search
+
+---
+
+# 12. Data Classification
+
+| Level        | Description                  |
+| ------------ | ---------------------------- |
+| Public       | เปิดเผยได้                   |
+| Internal     | ใช้งานภายใน                  |
+| Confidential | ข้อมูลสำคัญ                  |
+| Restricted   | ข้อมูลที่ต้องควบคุมเป็นพิเศษ |
+
+ทุกคอลัมน์ต้องระบุระดับการจัดชั้นข้อมูลเพื่อใช้กำหนดนโยบายด้านความปลอดภัย
+
+---
+
+# 13. Data Lifecycle
+
+1. Create
+2. Update
+3. Review
+4. Publish
+5. Archive
+6. Soft Delete
+7. Purge (ตามนโยบายการเก็บรักษาข้อมูล)
+
+---
+
+# 14. Ownership
+
+ทุกตารางต้องระบุเจ้าของข้อมูล (Data Owner)
+
+ตัวอย่าง
+
+| Module     | Data Owner         |
+| ---------- | ------------------ |
+| Identity   | Identity Service   |
+| Curriculum | Curriculum Service |
+| Content    | Content Service    |
+| Assessment | Assessment Service |
+| AI         | AI Gateway Service |
+
+---
+
+# 15. Change Management
+
+การเปลี่ยนแปลง Data Dictionary ต้อง
+
+* มี Architecture Decision Record (ADR)
+* มี Migration Script
+* ผ่านการทดสอบ Migration
+* อัปเดต OpenAPI และ Canonical Data Model หากได้รับผลกระทบ
+* มีการตรวจสอบความเข้ากันได้ย้อนหลัง (Backward Compatibility)
+
+---
+
+# 16. Deliverables
+
+Data Dictionary ควรสามารถสร้างผลลัพธ์ได้หลายรูปแบบจากแหล่งข้อมูลเดียว
+
+* เว็บไซต์เอกสาร (Docs)
+* Excel Workbook
+* CSV
+* Markdown
+* OpenAPI Schema
+* Django Model Documentation
+* ERD Documentation
+* Database Migration Report
