@@ -1,0 +1,614 @@
+# REST API Design Standards
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Applies To:** REST APIs (OpenAPI 3.1)
+**Status:** Enterprise Standard
+
+---
+
+# 1. Purpose
+
+เอกสารนี้กำหนดมาตรฐานการออกแบบ REST API ของ ECOS เพื่อให้ทุกบริการ (Services), โมดูล (Modules), Plugin และระบบภายนอกใช้งาน API ในรูปแบบเดียวกัน
+
+วัตถุประสงค์
+
+* ความสม่ำเสมอของ API
+* รองรับ API Contract First
+* ลด Learning Curve ของนักพัฒนา
+* เพิ่มความสามารถในการดูแลรักษา
+* รองรับการขยายระบบในอนาคต
+
+---
+
+# 2. REST Principles
+
+ECOS ปฏิบัติตามหลักการ REST ดังนี้
+
+* Resource-Oriented Design
+* Stateless Communication
+* Uniform Interface
+* Cacheable Responses (เมื่อเหมาะสม)
+* Layered Architecture
+* Client-Server Separation
+
+---
+
+# 3. URI Design Standards
+
+## ใช้คำนาม (Nouns)
+
+ถูกต้อง
+
+```text
+GET /courses
+GET /lessons
+GET /resources
+```
+
+ไม่ถูกต้อง
+
+```text
+GET /getCourses
+GET /createLesson
+GET /deleteResource
+```
+
+---
+
+## ใช้พหูพจน์ (Plural)
+
+ถูกต้อง
+
+```text
+/users
+/courses
+/assessments
+```
+
+ไม่ถูกต้อง
+
+```text
+/user
+/course
+```
+
+---
+
+## ใช้ตัวพิมพ์เล็กทั้งหมด
+
+```text
+/course-resources
+```
+
+ไม่ใช้
+
+```text
+/CourseResources
+/courseResources
+```
+
+---
+
+## ใช้ Kebab Case
+
+```text
+lesson-resources
+generation-jobs
+```
+
+ไม่ใช้
+
+```text
+lesson_resources
+LessonResources
+```
+
+---
+
+# 4. HTTP Methods
+
+| Method | Purpose             |
+| ------ | ------------------- |
+| GET    | อ่านข้อมูล          |
+| POST   | สร้างข้อมูล         |
+| PUT    | แทนที่ข้อมูลทั้งหมด |
+| PATCH  | แก้ไขบางส่วน        |
+| DELETE | ลบข้อมูล            |
+
+---
+
+ตัวอย่าง
+
+```text
+GET /courses
+
+POST /courses
+
+GET /courses/{courseId}
+
+PATCH /courses/{courseId}
+
+DELETE /courses/{courseId}
+```
+
+---
+
+# 5. Resource Relationships
+
+Nested Resources
+
+```text
+GET /courses/{courseId}/units
+
+GET /units/{unitId}/lessons
+
+GET /lessons/{lessonId}/resources
+```
+
+Nested ไม่ควรเกิน 2–3 ระดับ
+
+---
+
+# 6. Collection Operations
+
+อ่านทั้งหมด
+
+```text
+GET /courses
+```
+
+สร้าง
+
+```text
+POST /courses
+```
+
+---
+
+# 7. Single Resource
+
+```text
+GET /courses/{courseId}
+
+PATCH /courses/{courseId}
+
+DELETE /courses/{courseId}
+```
+
+ใช้ Path Parameter สำหรับระบุ Resource เดียว
+
+---
+
+# 8. Action Endpoints
+
+หากเป็นการดำเนินการที่ไม่ใช่ CRUD ให้ใช้ Sub-resource ที่สื่อความหมาย
+
+ตัวอย่าง
+
+```text
+POST /resources/{resourceId}/publish
+
+POST /resources/{resourceId}/archive
+
+POST /ai/jobs/{jobId}/cancel
+```
+
+หลีกเลี่ยงการใช้ชื่อกริยาในระดับ Root เช่น `/publishResource`
+
+---
+
+# 9. Request Body
+
+ใช้ JSON
+
+ตัวอย่าง
+
+```json
+{
+  "title": "Newton's Laws",
+  "description": "Introduction",
+  "grade_level": "M4"
+}
+```
+
+---
+
+# 10. Response Envelope
+
+Success
+
+```json
+{
+  "data": {},
+  "meta": {},
+  "links": {}
+}
+```
+
+Collection
+
+```json
+{
+  "data": [],
+  "meta": {
+    "page": 1,
+    "page_size": 20,
+    "total": 250
+  },
+  "links": {
+    "self": "...",
+    "next": "...",
+    "prev": null
+  }
+}
+```
+
+---
+
+# 11. Error Response
+
+รูปแบบมาตรฐาน
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed.",
+    "details": [
+      {
+        "field": "title",
+        "message": "This field is required."
+      }
+    ]
+  },
+  "trace_id": "f2d0a7..."
+}
+```
+
+---
+
+# 12. HTTP Status Codes
+
+| Code | Usage                   |
+| ---- | ----------------------- |
+| 200  | Success                 |
+| 201  | Created                 |
+| 202  | Accepted                |
+| 204  | Deleted/No Content      |
+| 400  | Invalid Request         |
+| 401  | Authentication Required |
+| 403  | Forbidden               |
+| 404  | Not Found               |
+| 409  | Conflict                |
+| 412  | Precondition Failed     |
+| 422  | Business Rule Violation |
+| 429  | Rate Limited            |
+| 500  | Internal Error          |
+| 503  | Service Unavailable     |
+
+---
+
+# 13. Pagination
+
+Query Parameters
+
+```text
+?page=1&page_size=20
+```
+
+Response
+
+```json
+{
+  "meta": {
+    "page": 1,
+    "page_size": 20,
+    "total": 1000,
+    "pages": 50
+  }
+}
+```
+
+Maximum
+
+```text
+page_size = 100
+```
+
+---
+
+# 14. Filtering
+
+ตัวอย่าง
+
+```text
+?status=published
+
+?subject=physics
+
+?grade_level=M4
+
+?owner_id=uuid
+```
+
+รองรับการใช้หลายตัวกรองพร้อมกัน
+
+```text
+?status=published&subject=physics
+```
+
+---
+
+# 15. Sorting
+
+Ascending
+
+```text
+?sort=title
+```
+
+Descending
+
+```text
+?sort=-created_at
+```
+
+รองรับหลายฟิลด์
+
+```text
+?sort=subject,-created_at
+```
+
+---
+
+# 16. Searching
+
+Full-text Search
+
+```text
+?q=motion
+```
+
+Search ต้องไม่ปะปนกับ Filter
+
+---
+
+# 17. Field Selection
+
+Client เลือกเฉพาะฟิลด์ที่ต้องการได้
+
+```text
+?fields=id,title,status
+```
+
+ช่วยลดปริมาณข้อมูลที่ส่งกลับ
+
+---
+
+# 18. Resource Expansion
+
+โหลดข้อมูลที่เกี่ยวข้อง
+
+```text
+?include=units
+
+?include=units,lessons
+```
+
+ลดจำนวนการเรียก API หลายครั้ง
+
+---
+
+# 19. Versioning
+
+ใช้ URL Versioning
+
+```text
+/api/v1
+
+/api/v2
+```
+
+ห้ามเปลี่ยนพฤติกรรมของ API ภายในเวอร์ชันเดียวกันในลักษณะที่ทำให้ใช้งานร่วมกับเวอร์ชันเดิมไม่ได้
+
+---
+
+# 20. Idempotency
+
+POST ที่อาจถูกเรียกซ้ำ เช่น การสร้างงาน AI หรือการชำระเงิน (หากมีในอนาคต) ต้องรองรับ
+
+```text
+Idempotency-Key
+```
+
+เพื่อป้องกันการสร้างข้อมูลซ้ำ
+
+---
+
+# 21. Headers
+
+Request
+
+```text
+Authorization
+
+Accept
+
+Content-Type
+
+X-Request-ID
+
+X-Correlation-ID
+
+If-Match
+```
+
+Response
+
+```text
+ETag
+
+Location
+
+Retry-After
+
+X-RateLimit-Limit
+
+X-RateLimit-Remaining
+```
+
+---
+
+# 22. Concurrency Control
+
+ใช้ Optimistic Concurrency ด้วย
+
+```text
+ETag
+
+If-Match
+```
+
+หากข้อมูลถูกแก้ไขโดยผู้อื่น ให้ตอบกลับ
+
+```text
+412 Precondition Failed
+```
+
+---
+
+# 23. Security
+
+ทุก Endpoint ต้องกำหนดสิทธิ์อย่างชัดเจน
+
+ตัวอย่าง Scopes
+
+```text
+course.read
+
+course.write
+
+lesson.read
+
+lesson.write
+
+assessment.generate
+
+admin
+```
+
+ใช้หลัก Least Privilege
+
+---
+
+# 24. Deprecation Policy
+
+เมื่อเลิกใช้ Endpoint
+
+ตอบกลับ Header
+
+```text
+Deprecation: true
+Sunset: Wed, 31 Dec 2027 23:59:59 GMT
+```
+
+พร้อมระบุ Endpoint ใหม่ในเอกสาร OpenAPI
+
+---
+
+# 25. Rate Limiting
+
+กำหนดตามประเภทของ API
+
+| API Type       |       Default Limit |
+| -------------- | ------------------: |
+| Read           | 300 requests/minute |
+| Write          |  60 requests/minute |
+| AI Generation  |  20 requests/minute |
+| Authentication |  10 requests/minute |
+
+ค่าจริงสามารถปรับได้ตามบทบาทผู้ใช้หรือแผนบริการ
+
+---
+
+# 26. Caching
+
+รองรับ
+
+* Cache-Control
+* ETag
+* Last-Modified
+
+ใช้สำหรับข้อมูลที่เปลี่ยนแปลงไม่บ่อย เช่น รายวิชา เทมเพลต หรือข้อมูลอ้างอิง
+
+---
+
+# 27. Long-Running Operations
+
+งานที่ใช้เวลานาน (เช่น AI Generation หรือ Export)
+
+1. `POST` สร้างงาน
+2. ตอบกลับ `202 Accepted`
+3. ส่ง `Location` ไปยัง Resource ของงาน
+4. Client ตรวจสอบสถานะผ่าน `GET`
+
+ตัวอย่าง
+
+```text
+POST /ai/jobs
+
+202 Accepted
+
+Location: /api/v1/ai/jobs/{jobId}
+```
+
+---
+
+# 28. Observability
+
+ทุก Request ต้องสามารถติดตามได้ผ่าน
+
+* Trace ID
+* Correlation ID
+* Structured Logs
+* Metrics
+
+เพื่อสนับสนุนการวิเคราะห์ปัญหาและการตรวจสอบย้อนหลัง
+
+---
+
+# 29. Documentation Requirements
+
+ทุก Endpoint ต้องมี
+
+* Summary
+* Description
+* Tags
+* Parameters
+* Request Body
+* Response Schema
+* Error Responses
+* Authentication Requirement
+* Example Request
+* Example Response
+
+ก่อนเผยแพร่ API
+
+---
+
+# 30. REST API Compliance Checklist
+
+ก่อนนำ Endpoint ขึ้น Production ต้องตรวจสอบว่า
+
+* URI เป็นไปตามมาตรฐาน
+* ใช้ HTTP Method ถูกต้อง
+* มี OpenAPI Contract
+* มี Request/Response Schema
+* รองรับ Error มาตรฐาน
+* มี Pagination/Filtering/Sorting เมื่อเหมาะสม
+* กำหนด Security และ Scope
+* มี Contract Test
+* มี Integration Test
+* มี Documentation ครบถ้วน
+* ผ่าน Architecture Review
