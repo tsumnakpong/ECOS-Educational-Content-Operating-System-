@@ -1,0 +1,388 @@
+# Canonical Data Model (CDM)
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Architecture Specification
+
+---
+
+# 1. Purpose
+
+Canonical Data Model (CDM) คือแบบจำลองข้อมูลกลางของ ECOS ที่กำหนดโครงสร้าง ความหมาย และความสัมพันธ์ของข้อมูล เพื่อให้ทุกระบบภายในและระบบภายนอกสื่อสารกันด้วยโมเดลเดียวกัน
+
+วัตถุประสงค์
+
+* เป็นแหล่งอ้างอิงข้อมูลกลาง (Single Source of Truth)
+* ลดการแปลงข้อมูลระหว่างโมดูล
+* สนับสนุน API, Plugin และ Integration
+* รองรับการขยายระบบในอนาคต
+
+---
+
+# 2. Design Principles
+
+* Domain-Driven Design (DDD)
+* Canonical Naming
+* UUID เป็น Primary Identifier
+* UTC สำหรับวันเวลา
+* ISO Standards (Language, Country, Timezone)
+* Versioned Resources
+* Immutable Published Content
+
+---
+
+# 3. Core Canonical Entities
+
+```text id="m8k3qa"
+Organization
+ ├── School
+ ├── Department
+ └── Team
+
+User
+ ├── Role
+ └── Permission
+
+Course
+ ├── Unit
+ │    └── Lesson
+ │          ├── Resource
+ │          ├── Assessment
+ │          └── AI Job
+
+Template
+Plugin
+Workflow
+Notification
+Analytics
+```
+
+---
+
+# 4. Common Base Entity
+
+ทุก Entity ในระบบสืบทอดคุณสมบัติพื้นฐานร่วมกัน
+
+| Field      | Type      | Description     |
+| ---------- | --------- | --------------- |
+| id         | UUID      | รหัสหลัก        |
+| created_at | Timestamp | วันที่สร้าง     |
+| updated_at | Timestamp | วันที่แก้ไข     |
+| created_by | UUID      | ผู้สร้าง        |
+| updated_by | UUID      | ผู้แก้ไขล่าสุด  |
+| version    | Integer   | เวอร์ชันข้อมูล  |
+| status     | Enum      | สถานะ           |
+| metadata   | JSON      | ข้อมูลเพิ่มเติม |
+
+---
+
+# 5. Canonical Entity Definitions
+
+## User
+
+| Field           | Type   |
+| --------------- | ------ |
+| id              | UUID   |
+| username        | String |
+| email           | String |
+| full_name       | String |
+| organization_id | UUID   |
+| role_ids        | UUID[] |
+| locale          | String |
+| timezone        | String |
+
+---
+
+## Organization
+
+| Field    | Type   |
+| -------- | ------ |
+| id       | UUID   |
+| code     | String |
+| name     | String |
+| slug     | String |
+| language | String |
+| timezone | String |
+
+---
+
+## Course
+
+| Field           | Type   |
+| --------------- | ------ |
+| id              | UUID   |
+| organization_id | UUID   |
+| code            | String |
+| title           | String |
+| description     | Text   |
+| academic_year   | String |
+| subject         | String |
+| grade_level     | String |
+| status          | Enum   |
+
+---
+
+## Unit
+
+| Field     | Type    |
+| --------- | ------- |
+| id        | UUID    |
+| course_id | UUID    |
+| title     | String  |
+| sequence  | Integer |
+
+---
+
+## Lesson
+
+| Field            | Type    |
+| ---------------- | ------- |
+| id               | UUID    |
+| unit_id          | UUID    |
+| title            | String  |
+| lesson_type      | Enum    |
+| duration_minutes | Integer |
+| objectives       | JSON    |
+
+---
+
+## Learning Resource
+
+| Field         | Type    |
+| ------------- | ------- |
+| id            | UUID    |
+| lesson_id     | UUID    |
+| resource_type | Enum    |
+| title         | String  |
+| body          | JSON    |
+| language      | String  |
+| version       | Integer |
+
+---
+
+## Assessment
+
+| Field           | Type    |
+| --------------- | ------- |
+| id              | UUID    |
+| lesson_id       | UUID    |
+| assessment_type | Enum    |
+| total_score     | Decimal |
+| rubric_id       | UUID    |
+
+---
+
+## AI Generation Job
+
+| Field       | Type    |
+| ----------- | ------- |
+| id          | UUID    |
+| provider    | String  |
+| model       | String  |
+| prompt      | JSON    |
+| response    | JSON    |
+| token_usage | Integer |
+| cost        | Decimal |
+| status      | Enum    |
+
+---
+
+# 6. Shared Value Objects
+
+## Address
+
+```json id="8q11mq"
+{
+  "country": "",
+  "province": "",
+  "district": "",
+  "subdistrict": "",
+  "postal_code": ""
+}
+```
+
+---
+
+## Metadata
+
+```json id="7w74kv"
+{
+  "tags": [],
+  "keywords": [],
+  "language": "th",
+  "license": "",
+  "thumbnail": ""
+}
+```
+
+---
+
+## AuditInfo
+
+```json id="qb55ns"
+{
+  "created_at": "",
+  "created_by": "",
+  "updated_at": "",
+  "updated_by": ""
+}
+```
+
+---
+
+# 7. Enumerations
+
+## Status
+
+* Draft
+* Review
+* Approved
+* Published
+* Archived
+
+## LessonType
+
+* Theory
+* Activity
+* Lab
+* Project
+* Assessment
+
+## ResourceType
+
+* Worksheet
+* KnowledgeSheet
+* Slide
+* Image
+* Video
+* Document
+
+## AIJobStatus
+
+* Pending
+* Running
+* Completed
+* Failed
+* Cancelled
+
+---
+
+# 8. Relationship Rules
+
+```text id="1xsyv8"
+Organization
+    1 ───── N Course
+
+Course
+    1 ───── N Unit
+
+Unit
+    1 ───── N Lesson
+
+Lesson
+    1 ───── N Learning Resource
+
+Lesson
+    1 ───── N Assessment
+
+Lesson
+    1 ───── N AI Generation Job
+```
+
+---
+
+# 9. Canonical API Payload
+
+ตัวอย่างการแลกเปลี่ยนข้อมูลระหว่างบริการ
+
+```json id="8t2gca"
+{
+  "entity": "Lesson",
+  "id": "uuid",
+  "version": 3,
+  "status": "Published",
+  "data": {},
+  "metadata": {},
+  "audit": {}
+}
+```
+
+---
+
+# 10. Domain Events
+
+ทุก Event ใช้โครงสร้างมาตรฐานเดียวกัน
+
+```json id="f92a8x"
+{
+  "event_id": "uuid",
+  "event_type": "LessonPublished",
+  "occurred_at": "2026-07-17T10:30:00Z",
+  "actor_id": "uuid",
+  "resource_id": "uuid",
+  "payload": {}
+}
+```
+
+---
+
+# 11. Data Governance Rules
+
+* ทุก Entity ต้องมี UUID
+* ทุก Resource ต้องมี Version
+* Published Content เป็น Immutable
+* Soft Delete สำหรับข้อมูลธุรกิจ
+* Hard Delete เฉพาะข้อมูลชั่วคราวหรือข้อมูลที่หมดอายุ
+
+---
+
+# 12. Naming Standards
+
+* Entity: PascalCase (Course, Lesson)
+* Database Table: snake_case (courses, lessons)
+* JSON Field: snake_case
+* API Resource: kebab-case
+* Event Type: PascalCase (LessonPublished)
+
+---
+
+# 13. Interoperability
+
+CDM รองรับการเชื่อมต่อกับ
+
+* REST API
+* GraphQL
+* Plugin SDK
+* Event Bus
+* Message Queue
+* Data Warehouse
+* Business Intelligence
+* External LMS
+
+โดยไม่ต้องเปลี่ยนโครงสร้างข้อมูลหลัก
+
+---
+
+# 14. Versioning Strategy
+
+ทุก Canonical Entity มีเวอร์ชัน
+
+* Major: เปลี่ยนโครงสร้างข้อมูล
+* Minor: เพิ่มฟิลด์ที่ไม่กระทบความเข้ากันได้
+* Patch: แก้ไขคำอธิบายหรือข้อผิดพลาด
+
+ระบบต้องรองรับการทำงานร่วมกันระหว่างเวอร์ชันในช่วงเปลี่ยนผ่าน
+
+---
+
+# 15. Compliance
+
+Canonical Data Model ต้องสอดคล้องกับ
+
+* Domain Model Specification
+* Database Design Specification
+* OpenAPI Specification
+* Event Contract Specification
+* Plugin SDK Specification
+
+การเปลี่ยนแปลง CDM ต้องได้รับการบันทึกผ่าน Architecture Decision Record (ADR) และต้องมีการประเมินผลกระทบต่อทุกบริการที่ใช้งานโมเดลข้อมูลนี้
