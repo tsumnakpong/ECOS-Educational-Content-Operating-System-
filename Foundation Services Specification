@@ -1,0 +1,493 @@
+# Foundation Services Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Architecture Specification
+
+---
+
+# 1. Purpose
+
+Foundation Services คือชุดบริการกลาง (Core Platform Services) ที่ทุกโมดูลของ ECOS ใช้งานร่วมกัน โดยให้บริการด้านตัวตน การกำหนดค่า ความปลอดภัย การจัดเก็บข้อมูล การทำงานร่วมกัน และการเชื่อมต่อกับระบบภายนอก
+
+---
+
+# 2. Architecture Overview
+
+```text
+                    Foundation Services
+
+ ┌────────────────────────────────────────────┐
+ │ Identity Service                           │
+ │ Configuration Service                      │
+ │ Metadata Service                           │
+ │ Schema Service                             │
+ │ Workflow Service                           │
+ │ Notification Service                       │
+ │ Storage Service                            │
+ │ AI Gateway Service                         │
+ │ Security Service                           │
+ │ Runtime Service                            │
+ │ Localization Service                       │
+ │ Event Service                              │
+ │ Audit Service                              │
+ │ Observability Service                      │
+ │ Feature Flag Service                       │
+ └────────────────────────────────────────────┘
+```
+
+ทุก Service ถูกเรียกผ่าน Application Layer เท่านั้น และไม่ให้ UI ติดต่อฐานข้อมูลโดยตรง
+
+---
+
+# 3. Service Catalog
+
+| Service       | Responsibility           | Aggregate Root |
+| ------------- | ------------------------ | -------------- |
+| Identity      | ผู้ใช้ สิทธิ์ บทบาท      | User           |
+| Organization  | โรงเรียนและองค์กร        | Organization   |
+| Configuration | การตั้งค่าระบบ           | Configuration  |
+| Metadata      | Metadata กลาง            | Metadata       |
+| Schema        | Data Schema              | Schema         |
+| Workflow      | วงจรอนุมัติ              | Workflow       |
+| Notification  | การแจ้งเตือน             | Notification   |
+| Storage       | ไฟล์และสื่อ              | File           |
+| AI Gateway    | เชื่อมต่อผู้ให้บริการ AI | AIProvider     |
+| Runtime       | งานเบื้องหลัง            | RuntimeJob     |
+| Security      | ความปลอดภัย              | SecurityPolicy |
+| Localization  | ภาษาและภูมิภาค           | Locale         |
+| Event         | Domain Events            | Event          |
+| Audit         | บันทึกการเปลี่ยนแปลง     | AuditLog       |
+| Observability | Metrics / Logs / Traces  | Metric         |
+| Feature Flag  | เปิด–ปิดความสามารถ       | FeatureFlag    |
+
+---
+
+# 4. Identity Service
+
+## Responsibilities
+
+* Authentication
+* Authorization
+* User Management
+* Session Management
+* Role Management
+* Permission Management
+
+## APIs
+
+* Login
+* Logout
+* Refresh Token
+* Change Password
+* Assign Role
+* Revoke Role
+
+## Domain Objects
+
+* User
+* Role
+* Permission
+* Session
+* Profile
+
+---
+
+# 5. Organization Service
+
+## Responsibilities
+
+* Multi-tenant
+* School
+* Department
+* Team
+* Membership
+
+## Domain Objects
+
+* Organization
+* School
+* Department
+* Team
+* Membership
+
+---
+
+# 6. Configuration Service
+
+จัดเก็บการตั้งค่าระดับ
+
+* Platform
+* Organization
+* School
+* User
+
+ตัวอย่าง
+
+```yaml
+site.name
+default.language
+default.ai.provider
+theme
+timezone
+storage.provider
+```
+
+รองรับลำดับการสืบทอดค่า (Configuration Inheritance)
+
+Platform → Organization → School → User
+
+---
+
+# 7. Metadata Service
+
+จัดเก็บ Metadata กลางของทรัพยากรทั้งหมด
+
+ประกอบด้วย
+
+* Title
+* Description
+* Tags
+* Subject
+* Grade
+* Curriculum
+* Author
+* Version
+* License
+* Language
+
+Metadata ถูกอ้างอิงร่วมกันทุกโมดูล
+
+---
+
+# 8. Schema Service
+
+จัดการ Schema สำหรับข้อมูลแบบ Dynamic
+
+ตัวอย่าง
+
+* Rubric Schema
+* Worksheet Schema
+* Lesson Schema
+* Assessment Schema
+* Plugin Schema
+
+รองรับการกำหนดเวอร์ชันของ Schema และการตรวจสอบความถูกต้อง (Validation)
+
+---
+
+# 9. Workflow Service
+
+## Responsibilities
+
+* State Machine
+* Approval
+* Review
+* Publishing
+* Scheduling
+
+ตัวอย่างสถานะ
+
+```text
+Draft
+ ↓
+Review
+ ↓
+Approved
+ ↓
+Published
+ ↓
+Archived
+```
+
+รองรับการกำหนด Workflow ตามประเภทของทรัพยากร
+
+---
+
+# 10. Notification Service
+
+ช่องทางการแจ้งเตือน
+
+* In-App
+* Email
+* Webhook
+* Push (Future)
+
+เหตุการณ์ตัวอย่าง
+
+* Content Approved
+* Export Completed
+* Plugin Updated
+* AI Job Failed
+
+---
+
+# 11. Storage Service
+
+รองรับ
+
+* Images
+* Documents
+* Templates
+* Generated Files
+* Plugin Packages
+
+Storage Backend
+
+* Local
+* S3 Compatible
+* Google Cloud Storage
+* Azure Blob Storage
+
+ทุกไฟล์มี Metadata และ Version
+
+---
+
+# 12. AI Gateway Service
+
+หน้าที่หลัก
+
+* Provider Abstraction
+* Prompt Routing
+* Model Selection
+* Retry Policy
+* Rate Limiting
+* Cost Tracking
+* Token Accounting
+
+รองรับผู้ให้บริการ
+
+* OpenAI
+* Google Gemini
+* Anthropic Claude
+* Local LLM
+* Future Providers
+
+Provider ใหม่ต้องสามารถเพิ่มได้โดยไม่แก้ไข Business Logic
+
+---
+
+# 13. Runtime Service
+
+จัดการงานเบื้องหลัง
+
+* AI Generation
+* Export
+* Scheduled Jobs
+* Cleanup
+* Indexing
+
+สถานะของงาน
+
+* Pending
+* Running
+* Completed
+* Failed
+* Cancelled
+
+---
+
+# 14. Security Service
+
+ความสามารถหลัก
+
+* OAuth2 / OIDC
+* RBAC
+* API Key
+* Secret Management
+* Encryption
+* Rate Limiting
+* CSRF Protection
+* Security Policy
+
+รองรับการบันทึกเหตุการณ์ด้านความปลอดภัย
+
+---
+
+# 15. Localization Service
+
+จัดการ
+
+* ภาษา
+* เขตเวลา
+* รูปแบบวันที่
+* สกุลเงิน
+* การแปลข้อความ
+
+รองรับหลายภาษาโดยไม่ต้องแก้ไขโค้ดธุรกิจ
+
+---
+
+# 16. Event Service
+
+Domain Events ตัวอย่าง
+
+* UserCreated
+* CourseCreated
+* LessonPublished
+* WorksheetGenerated
+* ExportCompleted
+* PluginInstalled
+
+รองรับ Event Bus ภายใน และสามารถเชื่อม Message Broker ภายนอกได้ในอนาคต
+
+---
+
+# 17. Audit Service
+
+บันทึกทุกการเปลี่ยนแปลงที่สำคัญ
+
+ข้อมูลที่จัดเก็บ
+
+* ผู้ดำเนินการ
+* เวลา
+* การกระทำ
+* ทรัพยากร
+* ค่าเดิม
+* ค่าหลังเปลี่ยน
+
+รองรับการตรวจสอบย้อนหลังและการปฏิบัติตามข้อกำหนดด้านการกำกับดูแล
+
+---
+
+# 18. Observability Service
+
+เก็บข้อมูล
+
+* Metrics
+* Logs
+* Traces
+* Health Checks
+
+ตัวชี้วัดหลัก
+
+* API Response Time
+* AI Generation Time
+* Queue Length
+* Error Rate
+* Storage Usage
+
+---
+
+# 19. Feature Flag Service
+
+ใช้เปิด–ปิดความสามารถของระบบโดยไม่ต้อง Deploy ใหม่
+
+ตัวอย่าง
+
+* AI Studio v2
+* Experimental Models
+* Plugin Marketplace
+* Beta Features
+
+รองรับการเปิดใช้งานตาม Platform, Organization หรือ User
+
+---
+
+# 20. Common Foundation Contracts
+
+ทุก Service ต้องปฏิบัติตามมาตรฐานเดียวกัน
+
+## API Contract
+
+* RESTful Endpoints
+* JSON Responses
+* Versioned APIs
+* Consistent Error Format
+
+## Logging
+
+* Correlation ID
+* Request ID
+* Structured Logging
+
+## Security
+
+* Authentication Required
+* Authorization Check
+* Audit Logging
+
+## Error Handling
+
+* Standard Error Codes
+* Validation Messages
+* Retryable Errors
+
+---
+
+# 21. Dependency Rules
+
+```text
+Presentation
+      │
+Application
+      │
+Foundation Services
+      │
+Infrastructure
+```
+
+กฎสำคัญ
+
+* Foundation Services ต้องไม่อ้างอิง UI
+* Domain ไม่ขึ้นกับผู้ให้บริการภายนอก
+* Infrastructure เป็นชั้นที่เชื่อมต่อ Framework, Database และ Third-party APIs
+
+---
+
+# 22. Django Mapping
+
+```text
+core/
+├── foundation/
+│   ├── identity/
+│   ├── organization/
+│   ├── configuration/
+│   ├── metadata/
+│   ├── schema/
+│   ├── workflow/
+│   ├── notification/
+│   ├── storage/
+│   ├── ai_gateway/
+│   ├── runtime/
+│   ├── security/
+│   ├── localization/
+│   ├── events/
+│   ├── audit/
+│   ├── observability/
+│   └── feature_flags/
+```
+
+แต่ละ Foundation Service ควรมีโครงสร้างมาตรฐาน
+
+* `models.py`
+* `services.py`
+* `repositories.py`
+* `serializers.py`
+* `views.py`
+* `permissions.py`
+* `signals.py`
+* `tasks.py`
+* `tests/`
+
+---
+
+# 23. Evolution Strategy
+
+**Phase 1 – Modular Monolith**
+
+* ทุก Foundation Service ทำงานภายใน Django Project เดียว
+* ใช้ Shared Database และ Event ภายใน
+
+**Phase 2 – Extractable Services**
+
+* แยก AI Gateway, Notification และ Observability เป็นบริการอิสระ
+* เชื่อมต่อผ่าน API หรือ Message Broker โดยไม่เปลี่ยน Domain Model
+
+**Phase 3 – Enterprise Platform**
+
+* รองรับหลายองค์กร (Multi-tenant)
+* High Availability
+* Horizontal Scaling
+* Plugin Ecosystem
+* รองรับการเชื่อมต่อระบบภายนอกในระดับองค์กร
