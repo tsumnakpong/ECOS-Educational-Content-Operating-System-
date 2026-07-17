@@ -437,3 +437,15 @@ Storage
 * ผ่าน Evaluation และ Regression Test
 * มี Rollback Plan
 * มี Documentation ครบถ้วน
+------------------------------------------------------
+
+ข้อเสนอเชิงสถาปัตยกรรม
+
+จากเอกสารทั้งหมดของ ECOS ผมแนะนำให้เพิ่มองค์ประกอบสำคัญอีก 4 ส่วน เพื่อให้ AI Platform สมบูรณ์ในระดับ Enterprise
+
+Prompt Language (ECP – Educational Content Prompt Language) เป็นภาษากลางสำหรับนิยาม Prompt, Workflow และ Output Schema ทำให้ Prompt มีโครงสร้างและนำกลับมาใช้ซ้ำได้
+Agent Framework กำหนดมาตรฐานสำหรับการสร้างและประสานงาน Agent แต่ละประเภท เช่น Lesson Agent, Worksheet Agent และ Reviewer Agent รวมถึงการเรียกใช้เครื่องมือ (Tool Calling)
+Knowledge Architecture ครอบคลุม Embedding Pipeline, Vector Store, Metadata Index และ Retrieval Policies เพื่อรองรับ RAG อย่างเป็นระบบ
+AI Operations (AIOps) สำหรับการจัดการวงจรชีวิตของโมเดลและ Prompt เช่น Prompt Registry, Model Registry, Evaluation Pipeline, Cost Dashboard และการติดตามคุณภาพของผลลัพธ์
+
+เมื่อรวมเอกสารนี้กับชุด Architecture ก่อนหน้า ECOS จะมีสถาปัตยกรรมที่ครอบคลุมตั้งแต่ Business, Domain, Data, API, Security, Event, Plugin และ AI Platform ซึ่งเป็นรากฐานที่พร้อมสำหรับการพัฒนาแพลตฟอร์มในระดับองค์กรและการขยายระบบในอนาคต
