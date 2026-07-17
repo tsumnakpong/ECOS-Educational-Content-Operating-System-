@@ -1,0 +1,573 @@
+# Development Guide
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Engineering Standard
+**Audience:** Backend Developers, Frontend Developers, AI Engineers, QA Engineers, DevOps Engineers
+
+---
+
+# 1. Purpose
+
+Development Guide กำหนดมาตรฐานการพัฒนา ECOS เพื่อให้ทีมพัฒนาทุกคนทำงานในแนวทางเดียวกัน ลดความแตกต่างของรูปแบบโค้ด และเพิ่มคุณภาพของซอฟต์แวร์
+
+วัตถุประสงค์
+
+* กำหนดแนวปฏิบัติในการพัฒนา
+* ลด Technical Debt
+* เพิ่มคุณภาพของโค้ด
+* สนับสนุน Continuous Delivery
+* ทำให้สมาชิกใหม่เริ่มงานได้รวดเร็ว
+
+---
+
+# 2. Technology Stack
+
+## Backend
+
+* Python 3.13+
+* Django
+* Django REST Framework
+* Celery
+* Redis
+* PostgreSQL
+* Gunicorn
+
+---
+
+## Frontend
+
+* HTMX
+* Alpine.js
+* Tailwind CSS
+* Vite
+
+---
+
+## AI Platform
+
+* AI Gateway
+* Prompt Runtime
+* Agent Runtime
+* Vector Store
+* Plugin SDK
+
+---
+
+## Infrastructure
+
+* Docker
+* Docker Compose
+* Nginx
+* GitHub Actions
+* Prometheus
+* Grafana
+
+---
+
+# 3. Repository Structure
+
+```text
+ecos/
+
+apps/
+core/
+api/
+plugins/
+docs/
+scripts/
+tests/
+
+docker/
+infra/
+
+manage.py
+pyproject.toml
+```
+
+---
+
+# 4. Branch Strategy
+
+ใช้ Git Workflow
+
+```text
+main
+
+develop
+
+feature/*
+
+bugfix/*
+
+hotfix/*
+
+release/*
+```
+
+กฎ
+
+* main สำหรับ Production
+* develop สำหรับ Integration
+* feature สำหรับฟีเจอร์ใหม่
+* hotfix สำหรับแก้ไข Production
+* release สำหรับเตรียมเผยแพร่
+
+---
+
+# 5. Commit Convention
+
+ใช้ Conventional Commits
+
+```text
+feat:
+
+fix:
+
+docs:
+
+refactor:
+
+perf:
+
+style:
+
+test:
+
+build:
+
+ci:
+
+chore:
+```
+
+ตัวอย่าง
+
+```text
+feat(curriculum): add lesson versioning
+
+fix(ai): handle timeout retry
+
+docs(api): update OpenAPI specification
+```
+
+---
+
+# 6. Code Style
+
+Python
+
+* PEP 8
+* Black
+* Ruff
+* isort
+* MyPy
+
+JavaScript
+
+* ESLint
+* Prettier
+
+YAML
+
+* yamllint
+
+Markdown
+
+* markdownlint
+
+---
+
+# 7. Project Structure
+
+ทุก Django App
+
+```text
+app/
+
+models.py
+
+services.py
+
+repositories.py
+
+selectors.py
+
+serializers.py
+
+views.py
+
+permissions.py
+
+validators.py
+
+tasks.py
+
+signals.py
+
+urls.py
+
+tests/
+```
+
+---
+
+# 8. Layer Responsibilities
+
+Presentation
+
+* Views
+* Serializers
+
+Application
+
+* Services
+
+Domain
+
+* Models
+* Business Rules
+
+Infrastructure
+
+* Repository
+* External APIs
+* Storage
+* AI Provider
+
+ห้าม Business Logic อยู่ใน View
+
+---
+
+# 9. Dependency Rules
+
+```text
+Presentation
+
+↓
+
+Application
+
+↓
+
+Domain
+
+↓
+
+Infrastructure
+```
+
+ห้าม Dependency ย้อนกลับ
+
+---
+
+# 10. Configuration Management
+
+Environment Variables
+
+```text
+DATABASE_URL
+
+REDIS_URL
+
+SECRET_KEY
+
+AI_PROVIDER
+
+AI_API_KEY
+```
+
+ห้ามเก็บ Secret ใน Source Code
+
+---
+
+# 11. Logging
+
+ใช้ Structured Logging
+
+ทุก Log ต้องมี
+
+* Request ID
+* Correlation ID
+* User ID (ถ้ามี)
+* Organization ID (ถ้ามี)
+* Module
+* Severity
+
+---
+
+# 12. Error Handling
+
+ใช้ Exception กลาง
+
+ตัวอย่าง
+
+* ValidationError
+* PermissionDenied
+* BusinessRuleError
+* ExternalServiceError
+* AIProviderError
+
+Error ทั้งหมดต้องถูกแปลงเป็นมาตรฐาน API Response
+
+---
+
+# 13. Testing Strategy
+
+## Unit Tests
+
+ทดสอบ Business Logic
+
+---
+
+## Integration Tests
+
+ทดสอบหลายโมดูลร่วมกัน
+
+---
+
+## API Contract Tests
+
+ตรวจสอบความสอดคล้องกับ OpenAPI
+
+---
+
+## End-to-End Tests
+
+จำลองการทำงานของผู้ใช้
+
+---
+
+## Performance Tests
+
+ตรวจสอบ Latency และ Throughput
+
+---
+
+# 14. Test Coverage
+
+เป้าหมาย
+
+| Module   | Coverage |
+| -------- | -------: |
+| Domain   |    ≥ 95% |
+| Services |    ≥ 90% |
+| API      |    ≥ 85% |
+| Overall  |    ≥ 85% |
+
+---
+
+# 15. Database Development
+
+ใช้
+
+* Django Migrations
+* UUID Primary Keys
+* Soft Delete
+* Versioning
+
+ห้ามแก้ Migration ที่ Deploy แล้ว
+
+---
+
+# 16. API Development
+
+ทุก Endpoint ต้องมี
+
+* OpenAPI Contract
+* Authentication
+* Authorization
+* Validation
+* Pagination (เมื่อเหมาะสม)
+* Error Responses
+* Example Payloads
+
+---
+
+# 17. AI Development
+
+ทุก Prompt ต้องมี
+
+* Version
+* Owner
+* Tests
+* Evaluation
+* Cost Tracking
+
+ทุก Agent ต้องลงทะเบียนใน Agent Registry
+
+---
+
+# 18. Plugin Development
+
+Plugin ต้อง
+
+* ใช้ Plugin SDK เท่านั้น
+* ไม่เข้าถึง Database โดยตรง
+* ผ่าน Security Review
+* ผ่าน Compatibility Test
+
+---
+
+# 19. Security Checklist
+
+ทุก Pull Request ต้องตรวจสอบ
+
+* ไม่มี Hardcoded Secret
+* ไม่มี SQL Injection
+* ไม่มี Command Injection
+* ตรวจสอบสิทธิ์ครบทุก Endpoint
+* Validate Input ทุกจุด
+
+---
+
+# 20. Pull Request Standards
+
+PR ทุกอันต้องมี
+
+* Description
+* Linked Issue
+* Test Evidence
+* Breaking Changes (ถ้ามี)
+* Documentation Update (ถ้ามี)
+
+Reviewer อย่างน้อย 1 คนสำหรับการเปลี่ยนแปลงทั่วไป และ 2 คนสำหรับส่วน Core Platform
+
+---
+
+# 21. CI/CD Pipeline
+
+```text
+Commit
+   ↓
+Lint
+   ↓
+Unit Tests
+   ↓
+Integration Tests
+   ↓
+Security Scan
+   ↓
+Build
+   ↓
+Deploy (Staging)
+   ↓
+Acceptance Tests
+   ↓
+Deploy (Production)
+```
+
+---
+
+# 22. Performance Standards
+
+API
+
+* P95 Response Time ≤ 300 ms (งานทั่วไป)
+* Async สำหรับงาน AI และ Export
+
+Database
+
+* หลีกเลี่ยง N+1 Query
+* วิเคราะห์ Query ด้วย EXPLAIN ANALYZE
+
+---
+
+# 23. Documentation Standards
+
+ทุก Feature ใหม่ต้องอัปเดต
+
+* Architecture Documents
+* OpenAPI Specification
+* Data Dictionary
+* ADR (ถ้ากระทบสถาปัตยกรรม)
+* User Documentation (เมื่อเกี่ยวข้อง)
+
+---
+
+# 24. Development Workflow
+
+```text
+Issue
+   ↓
+Architecture Review
+   ↓
+Design
+   ↓
+Development
+   ↓
+Testing
+   ↓
+Code Review
+   ↓
+Merge
+   ↓
+Deploy
+```
+
+---
+
+# 25. Definition of Done
+
+งานจะถือว่าเสร็จสมบูรณ์เมื่อ
+
+* พัฒนาเสร็จตาม Requirement
+* ผ่าน Unit Tests
+* ผ่าน Integration Tests
+* ผ่าน Contract Tests
+* ผ่าน Code Review
+* ผ่าน Security Scan
+* อัปเดต Documentation
+* Deploy บน Staging สำเร็จ
+* ได้รับการยืนยันจาก QA หรือผู้รับผิดชอบ
+
+---
+
+# 26. Engineering Principles
+
+ทีมพัฒนาทุกคนควรยึดหลัก
+
+* Clean Architecture
+* SOLID Principles
+* DRY (Don't Repeat Yourself)
+* KISS (Keep It Simple, Stupid)
+* YAGNI (You Aren't Gonna Need It)
+* Composition over Inheritance
+* Explicit over Implicit
+* Secure by Default
+* Testable by Design
+* API Contract First
+* Documentation as Code
+
+---
+
+# 27. Recommended Toolchain
+
+| Category             | Recommended Tool     |
+| -------------------- | -------------------- |
+| Version Control      | Git                  |
+| Package Management   | uv                   |
+| Python Formatting    | Black                |
+| Python Linting       | Ruff                 |
+| Static Type Checking | MyPy                 |
+| JavaScript Linting   | ESLint               |
+| Formatting           | Prettier             |
+| Testing              | Pytest               |
+| API Testing          | Schemathesis         |
+| Security Scanning    | Bandit               |
+| Dependency Scanning  | pip-audit            |
+| Container            | Docker               |
+| CI/CD                | GitHub Actions       |
+| Monitoring           | Prometheus + Grafana |
+
+---
+
+# 28. Engineering Governance
+
+การเปลี่ยนแปลงที่กระทบ Architecture ต้อง
+
+* จัดทำ Architecture Decision Record (ADR)
+* ผ่าน Architecture Review
+* อัปเดตเอกสารที่เกี่ยวข้อง
+* ผ่าน Regression Test
+* มีแผน Rollback หากเกิดปัญหา
