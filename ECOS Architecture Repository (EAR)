@@ -1,0 +1,443 @@
+ecos/
+
+docs/
+
+├── 00-overview
+│
+├── 01-product
+│
+├── 02-business
+│
+├── 03-requirements
+│
+├── 04-domain
+│
+├── 05-architecture
+│
+├── 06-foundation
+│
+├── 07-platform
+│
+├── 08-ai
+│
+├── 09-data
+│
+├── 10-api
+│
+├── 11-security
+│
+├── 12-ui-ux
+│
+├── 13-development
+│
+├── 14-deployment
+│
+├── 15-testing
+│
+├── 16-operations
+│
+├── 17-plugin-sdk
+│
+├── 18-language
+│
+├── 19-roadmap
+│
+└── ADR
+------------
+00-overview
+
+README.md
+
+Vision.md
+
+Mission.md
+
+Glossary.md
+
+Principles.md
+
+Architecture-Summary.md
+------------
+01-product
+
+Vision
+
+Product Goals
+
+Target Users
+
+User Personas
+
+Business Model
+
+Roadmap
+
+Success Metrics
+------------
+02-business
+
+Business Processes
+
+Teacher Workflow
+
+Student Workflow
+
+School Workflow
+
+Admin Workflow
+
+Marketplace Workflow
+
+Publishing Workflow
+------------
+03-requirements
+Functional Requirements
+
+Non Functional Requirements
+
+Constraints
+
+Assumptions
+
+Quality Attributes
+------------
+04-domain
+Domain Model
+
+Entities
+-School
+
+-Course
+
+-Lesson
+
+-Worksheet
+
+-Knowledge Sheet
+
+-Assessment
+
+-Rubric
+
+-Plugin
+
+-AI Job
+
+-Media
+
+Aggregates
+
+Value Objects
+
+Bounded Contexts
+
+Relationships
+------------
+05-architecture
+Context Diagram
+
+Container Diagram
+
+Component Diagram
+
+Sequence Diagram
+
+Deployment Diagram
+
+Architecture Decision
+------------
+06-foundation
+Identity
+
+Configuration
+
+Metadata
+
+Schema
+
+Localization
+
+Runtime
+
+Package
+
+Workflow
+
+Policy
+
+Security
+
+Observability
+------------
+07-platform
+Platform Services
+
+Plugin System
+
+Marketplace
+
+CLI
+
+SDK
+
+Runtime
+
+Scheduler
+------------
+08-ai
+Prompt Compiler
+
+Prompt Builder
+
+Prompt Optimizer
+
+AI Gateway
+
+Model Router
+
+Embedding
+
+RAG
+
+Knowledge Engine
+
+Agent
+
+Image Generation
+
+Speech
+
+Evaluation
+------------
+09-data
+ER Diagram
+
+Database
+
+Migration
+
+Versioning
+
+Audit
+
+Backup
+
+Cache
+
+Storage
+------------
+10-api
+REST
+
+GraphQL
+
+Authentication
+
+Errors
+
+Events
+
+OpenAPI
+------------
+11-security
+OAuth
+
+JWT
+
+RBAC
+
+ABAC
+
+Encryption
+
+Secrets
+
+Audit
+
+Policies
+------------
+12-ui-ux
+Design System
+
+Theme
+
+Typography
+
+Icons
+
+Accessibility
+
+Wireframe
+
+Dashboard
+
+Studio
+------------
+13-development
+Coding Standard
+
+Git Workflow
+
+Branch Strategy
+
+Commit Convention
+
+Pull Request
+
+Review Checklist
+------------
+14-deployment
+Docker
+
+Nginx
+
+Kubernetes (ถ้าต้องการ)
+
+Monitoring
+
+Scaling
+
+Backup
+
+CI/CD
+------------
+15-testing
+Unit Test
+
+Integration Test
+
+API Test
+
+Performance Test
+
+AI Evaluation
+
+Regression Test
+
+Security Test
+------------
+16-operations
+Runbook
+
+Incident Response
+
+Logs
+
+Metrics
+
+Tracing
+
+Health Check
+------------
+17-plugin-sdk
+Plugin Spec
+
+Plugin Manifest
+
+Lifecycle
+
+Hooks
+
+Examples
+
+Marketplace
+------------
+18-language
+Grammar
+
+Syntax
+
+Parser
+
+AST
+
+Compiler
+
+Runtime
+
+Examples
+------------
+19-roadmap
+Milestones
+
+Sprint
+
+Backlog
+
+Releases
+
+Changelog
+------------
+ADR
+ADR-001
+
+Why Django
+
+ADR-002
+
+Why PostgreSQL
+
+ADR-003
+
+Why Plugin
+
+ADR-004
+
+Why AI Gateway
+
+ADR-005
+
+Why Compiler
+------------
+
+docs-as-code
+Git
+
+↓
+
+Markdown
+
+↓
+
+Review
+
+↓
+
+Version
+
+↓
+
+Publish
+
+---------------------
+Diagram Standards
+
+ใช้มาตรฐานเดียวกันทั้งระบบ
+
+C4 Model สำหรับ Context, Container และ Component
+Mermaid สำหรับ Sequence Diagram และ Flow Diagram (แสดงผลใน Markdown ได้)
+PlantUML สำหรับกรณีที่ต้องการ UML เชิงลึก
+ER Diagram สำหรับฐานข้อมูล
+
+การกำหนดมาตรฐานตั้งแต่ต้นจะช่วยให้ทุกคนอ่านและแก้ไขเอกสารได้ง่าย
+
+เป้าหมายของ Architecture Repository
+
+Repository นี้ไม่ใช่เพียงที่เก็บเอกสาร แต่เป็น คู่มือการพัฒนาทั้งระบบ ที่มีการควบคุมเวอร์ชัน ตรวจสอบร่วมกัน และอัปเดตไปพร้อมกับโค้ด เมื่อระบบเติบโตหรือมีผู้ร่วมพัฒนาเพิ่ม ทุกคนจะอ้างอิงข้อมูลจากที่เดียว ลดความคลาดเคลื่อนและช่วยให้การตัดสินใจด้านสถาปัตยกรรมมีเหตุผลและตรวจสอบย้อนหลังได้
+
+ข้อเสนอสำหรับขั้นถัดไป
+
+ผมแนะนำให้เราทำโครงการนี้เป็น Architecture Repository ก่อน 100% แล้วจึงเริ่มเขียนโค้ด โดยเรียงลำดับเอกสารดังนี้
+
+README และ Vision
+Product Requirements
+Domain Model
+C4 Architecture
+Foundation Services
+Database Design
+API Specification
+Plugin SDK
+AI Architecture
+Development Guide
+
+เมื่อครบชุดนี้ เราจะมี "แบบพิมพ์เขียว" ที่พร้อมให้ทีมพัฒนาเริ่มสร้างระบบจริงได้อย่างมั่นใจ และสามารถขยายต่อในอนาคตโดยไม่ต้องรื้อโครงสร้างใหม่ทั้งหมด.
