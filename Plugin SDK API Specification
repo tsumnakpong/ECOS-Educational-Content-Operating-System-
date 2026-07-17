@@ -659,3 +659,13 @@ Plugin ต้อง
 * ผ่าน Security Review
 * ผ่าน Compatibility Test
 * ลงทะเบียนใน Marketplace (หากเผยแพร่)
+
+---------------------------------------------
+เพื่อให้ ECOS เป็นแพลตฟอร์มที่ขยายได้ในระยะยาว ผมแนะนำให้แยก Plugin SDK ออกเป็น 4 ระดับ แทนการมี SDK ชุดเดียว
+| SDK             | หน้าที่                                                 |
+| --------------- | ------------------------------------------------------- |
+| **Core SDK**    | Logging, Events, Configuration, Storage, Authentication |
+| **Content SDK** | Course, Lesson, Worksheet, Assessment, Template APIs    |
+| **AI SDK**      | AI Gateway, Prompt Runtime, Embeddings, Agent Tools     |
+| **UI SDK**      | Dashboard, Widgets, Menus, Pages, Commands, Theme       |
+แนวทางนี้ทำให้ Plugin เลือกอ้างอิงเฉพาะความสามารถที่จำเป็น ลดการพึ่งพาโมดูลที่ไม่เกี่ยวข้อง และช่วยให้สามารถพัฒนาและออกเวอร์ชันของแต่ละ SDK ได้อย่างอิสระ โดยยังคงรักษาความเข้ากันได้กับ Core Platform ได้ดียิ่งขึ้น
