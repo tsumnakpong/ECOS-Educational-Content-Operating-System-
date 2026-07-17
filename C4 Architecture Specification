@@ -1,0 +1,643 @@
+# C4 Architecture Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Architecture Style:** Layered + Domain-Driven Design + Service-Oriented + API-First
+
+---
+
+# 1. Purpose
+
+เอกสารนี้อธิบายสถาปัตยกรรมของ ECOS ตั้งแต่ระดับภาพรวมของระบบจนถึงระดับโครงสร้างโค้ด โดยใช้ C4 Model ประกอบด้วย
+
+* Level 1 : Context
+* Level 2 : Container
+* Level 3 : Component
+* Level 4 : Code
+
+---
+
+# C4 Level 1 — System Context
+
+## Vision
+
+ECOS เป็นแพลตฟอร์ม AI สำหรับการสร้าง จัดการ และเผยแพร่สื่อการเรียนรู้ โดยทำหน้าที่เป็นศูนย์กลางเชื่อมโยงผู้ใช้ ระบบภายนอก และผู้ให้บริการ AI
+
+## Actors
+
+### Teacher
+
+* สร้างสื่อการเรียนรู้
+* ใช้งาน AI Studio
+* ส่งออกเอกสาร
+
+### Department Head
+
+* ตรวจสอบ
+* อนุมัติ
+* จัดการ Template
+
+### School Administrator
+
+* จัดการผู้ใช้
+* จัดการโรงเรียน
+* กำหนดนโยบาย
+
+### Platform Administrator
+
+* ดูแลระบบ
+* Marketplace
+* Plugin
+
+### Developer
+
+* พัฒนา Plugin
+* ใช้งาน SDK
+* เชื่อมต่อ API
+
+---
+
+## External Systems
+
+* OpenAI
+* Google Gemini
+* Anthropic Claude
+* Local LLM
+* Google Classroom
+* Moodle
+* Microsoft 365
+* Google Drive
+* Object Storage
+* Email Service
+
+---
+
+## Context Diagram
+
+```text
+                Teachers
+                    │
+                    │
+Students ───────── ECOS ───────── Administrators
+                    │
+                    │
+        External AI Providers
+                    │
+                    │
+      LMS / Cloud Storage / Email
+```
+
+---
+
+# C4 Level 2 — Container Diagram
+
+## Containers
+
+### Web Application
+
+Technology
+
+* Django
+* HTMX
+* Alpine.js
+
+Responsibilities
+
+* Dashboard
+* User Interface
+* Authentication
+* AI Studio
+
+---
+
+### REST API
+
+Technology
+
+* Django REST Framework
+
+Responsibilities
+
+* Public API
+* Mobile API
+* Plugin API
+* Integration API
+
+---
+
+### AI Gateway
+
+Responsibilities
+
+* Model Routing
+* Prompt Optimization
+* Cost Control
+* Retry
+* Provider Abstraction
+
+---
+
+### Rendering Service
+
+Responsibilities
+
+* DOCX
+* PDF
+* PPTX
+* HTML
+* Markdown
+
+---
+
+### Background Worker
+
+Technology
+
+* Celery
+
+Responsibilities
+
+* AI Jobs
+* Export
+* Notifications
+* Scheduled Tasks
+
+---
+
+### PostgreSQL
+
+Responsibilities
+
+* Transactional Data
+* Metadata
+* Audit
+
+---
+
+### Redis
+
+Responsibilities
+
+* Cache
+* Queue
+* Session
+* Rate Limiting
+
+---
+
+### Object Storage
+
+Responsibilities
+
+* Generated Files
+* Images
+* Templates
+* Plugin Packages
+
+---
+
+## Container Relationship
+
+```text
+Browser
+   │
+Web Application
+   │
+REST API
+   │
+Application Services
+   │
+Domain Services
+   │
+Infrastructure Services
+   │
+Database / Storage / AI Gateway
+```
+
+---
+
+# C4 Level 3 — Component Diagram
+
+## Web Application
+
+Components
+
+* Dashboard
+* AI Studio
+* Course Manager
+* Lesson Manager
+* Export Center
+* Marketplace
+* Administration
+
+---
+
+## AI Studio
+
+Components
+
+* Prompt Builder
+* Prompt Compiler
+* Template Selector
+* AI Gateway Client
+* Result Reviewer
+* Export Manager
+
+---
+
+## Curriculum
+
+Components
+
+* Course Service
+* Unit Service
+* Lesson Service
+* Standard Mapping
+* Competency Mapping
+
+---
+
+## Content
+
+Components
+
+* Worksheet Generator
+* Knowledge Generator
+* Activity Generator
+* Slide Generator
+* Image Generator
+
+---
+
+## Assessment
+
+Components
+
+* Question Generator
+* Rubric Generator
+* Answer Key Generator
+* Evaluation Engine
+
+---
+
+## Plugin
+
+Components
+
+* Plugin Manager
+* Manifest Loader
+* Hook Registry
+* Dependency Resolver
+
+---
+
+## Foundation Services
+
+Components
+
+* Identity
+* Configuration
+* Metadata
+* Localization
+* Workflow
+* Security
+* Observability
+
+---
+
+## Component Interaction
+
+```text
+Teacher
+
+↓
+
+AI Studio
+
+↓
+
+Prompt Builder
+
+↓
+
+Prompt Compiler
+
+↓
+
+AI Gateway
+
+↓
+
+LLM
+
+↓
+
+Renderer
+
+↓
+
+Storage
+
+↓
+
+Download
+```
+
+---
+
+# C4 Level 4 — Code Structure
+
+## Django Project Structure
+
+```text
+ecos/
+
+config/
+
+apps/
+
+core/
+
+api/
+
+docs/
+
+plugins/
+
+tests/
+```
+
+---
+
+## apps
+
+```text
+accounts/
+
+organizations/
+
+curriculum/
+
+content/
+
+assessment/
+
+ai/
+
+export/
+
+plugins/
+
+analytics/
+
+marketplace/
+```
+
+---
+
+## core
+
+```text
+foundation/
+
+runtime/
+
+services/
+
+events/
+
+permissions/
+
+utils/
+
+```
+
+---
+
+## Example App Structure
+
+```text
+curriculum/
+
+models.py
+
+services.py
+
+repositories.py
+
+selectors.py
+
+serializers.py
+
+views.py
+
+urls.py
+
+permissions.py
+
+validators.py
+
+tasks.py
+
+signals.py
+
+tests/
+```
+
+---
+
+## Layer Dependencies
+
+```text
+Presentation
+
+↓
+
+Application
+
+↓
+
+Domain
+
+↓
+
+Infrastructure
+```
+
+กฎสำคัญ
+
+* Presentation ห้ามเข้าถึง Database โดยตรง
+* Business Logic อยู่ใน Domain/Application Services
+* Infrastructure เป็นผู้เชื่อมต่อ Framework, Database และ AI Provider
+
+---
+
+## Service Boundaries
+
+Application Layer
+
+* Orchestrate Use Cases
+
+Domain Layer
+
+* Business Rules
+
+Infrastructure Layer
+
+* ORM
+* External API
+* Storage
+* Email
+* AI Provider
+
+---
+
+## Dependency Rule
+
+อนุญาต
+
+```text
+Presentation
+
+↓
+
+Application
+
+↓
+
+Domain
+
+↓
+
+Infrastructure
+```
+
+ไม่อนุญาต
+
+```text
+Infrastructure
+
+↓
+
+Domain
+```
+
+หรือ
+
+```text
+Presentation
+
+↓
+
+Database
+```
+
+---
+
+# Architectural Patterns
+
+ECOS ใช้หลายรูปแบบร่วมกัน
+
+* Layered Architecture
+* Domain-Driven Design (DDD)
+* Service-Oriented Architecture (SOA)
+* Repository Pattern
+* Unit of Work
+* Dependency Injection
+* Event-Driven Architecture
+* Plugin Architecture
+* API-First Design
+* Clean Architecture Principles
+
+---
+
+# Cross-Cutting Concerns
+
+ทุก Component ต้องรองรับ
+
+* Authentication
+* Authorization
+* Audit Logging
+* Error Handling
+* Validation
+* Localization
+* Monitoring
+* Metrics
+* Tracing
+
+---
+
+# Scalability Strategy
+
+## ระยะเริ่มต้น
+
+* Django Monolith
+* PostgreSQL
+* Redis
+* Celery
+
+## ระยะเติบโต
+
+แยก Service ได้โดยไม่เปลี่ยน Domain
+
+* AI Gateway
+* Rendering
+* Analytics
+* Marketplace
+* Notification
+
+---
+
+# Deployment Topology
+
+```text
+Internet
+
+↓
+
+Nginx
+
+↓
+
+Django
+
+├── Web
+├── API
+├── Admin
+
+↓
+
+Celery
+
+↓
+
+Redis
+
+↓
+
+PostgreSQL
+
+↓
+
+Object Storage
+
+↓
+
+AI Gateway
+
+↓
+
+External AI Providers
+```
+
+---
+
+# Architecture Principles
+
+1. Domain ก่อน Framework
+2. API คือสัญญาของระบบ
+3. Plugin ต้องไม่แก้ไข Core
+4. AI Provider เปลี่ยนได้โดยไม่กระทบ Business Logic
+5. ทุก Use Case ต้องสามารถทดสอบได้
+6. เอกสารและโค้ดต้องพัฒนาไปพร้อมกัน
+7. ออกแบบเพื่อรองรับการเติบโตจาก Monolith ไปสู่ Services โดยไม่ต้องเปลี่ยน Domain Model
