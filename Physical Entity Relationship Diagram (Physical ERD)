@@ -1,0 +1,477 @@
+# Physical Entity Relationship Diagram (Physical ERD)
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Database:** PostgreSQL 16+
+**ORM:** Django ORM
+
+---
+
+# 1. Purpose
+
+Physical ERD กำหนดโครงสร้างฐานข้อมูลจริง (Physical Database Structure) รวมถึง
+
+* Tables
+* Primary Keys
+* Foreign Keys
+* Constraints
+* Indexes
+* Cardinality
+* Junction Tables
+* Lookup Tables
+
+---
+
+# 2. High-Level Physical ERD
+
+```text
+┌──────────────────────┐
+│ organizations        │
+└──────────┬───────────┘
+           │1
+           │
+           │N
+┌──────────▼───────────┐
+│ schools              │
+└──────────┬───────────┘
+           │1
+           │
+           │N
+┌──────────▼───────────┐
+│ departments          │
+└──────────────────────┘
+
+
+┌──────────────────────┐
+│ users                │
+└──────────┬───────────┘
+           │M
+           │
+           │N
+┌──────────▼───────────┐
+│ user_roles           │
+└──────────┬───────────┘
+           │
+           │
+┌──────────▼───────────┐
+│ roles                │
+└──────────────────────┘
+
+
+organizations
+      │1
+      │
+      │N
+courses
+      │1
+      │
+      │N
+units
+      │1
+      │
+      │N
+lessons
+      ├─────────────┐
+      │             │
+      │             │
+      ▼             ▼
+resources      assessments
+                     │
+                     ▼
+                 questions
+```
+
+---
+
+# 3. Identity Module
+
+## users
+
+| Column          | Type         | Constraint   |
+| --------------- | ------------ | ------------ |
+| id              | UUID         | PK           |
+| organization_id | UUID         | FK           |
+| username        | varchar(150) | UNIQUE       |
+| email           | varchar(255) | UNIQUE       |
+| password_hash   | text         | NOT NULL     |
+| is_active       | boolean      | DEFAULT TRUE |
+| created_at      | timestamptz  | NOT NULL     |
+
+Indexes
+
+* username
+* email
+* organization_id
+
+---
+
+## roles
+
+| Column | Type         |
+| ------ | ------------ |
+| id     | UUID         |
+| code   | varchar(50)  |
+| name   | varchar(100) |
+
+UNIQUE(code)
+
+---
+
+## permissions
+
+| Column      | Type         |
+| ----------- | ------------ |
+| id          | UUID         |
+| code        | varchar(100) |
+| description | text         |
+
+---
+
+## user_roles
+
+Many-to-Many
+
+| user_id | FK users |
+| role_id | FK roles |
+
+Primary Key
+
+(user_id, role_id)
+
+---
+
+# 4. Organization Module
+
+## organizations
+
+| Column   | Type         |
+| -------- | ------------ |
+| id       | UUID         |
+| code     | varchar(30)  |
+| name     | varchar(255) |
+| slug     | varchar(100) |
+| language | varchar(10)  |
+| timezone | varchar(50)  |
+
+---
+
+## schools
+
+FK
+
+organization_id
+
+---
+
+## departments
+
+FK
+
+school_id
+
+---
+
+# 5. Curriculum Module
+
+## courses
+
+| Column          | Type         |
+| --------------- | ------------ |
+| id              | UUID         |
+| organization_id | UUID         |
+| code            | varchar(30)  |
+| title           | varchar(255) |
+| academic_year   | varchar(20)  |
+| status          | smallint     |
+
+Indexes
+
+* organization_id
+* status
+
+---
+
+## units
+
+FK
+
+course_id
+
+UNIQUE
+
+(course_id, sequence)
+
+---
+
+## lessons
+
+FK
+
+unit_id
+
+UNIQUE
+
+(unit_id, sequence)
+
+---
+
+# 6. Content Module
+
+## resources
+
+| Column        | Type         |
+| ------------- | ------------ |
+| id            | UUID         |
+| lesson_id     | UUID         |
+| resource_type | smallint     |
+| title         | varchar(255) |
+| body          | jsonb        |
+| metadata      | jsonb        |
+| version       | integer      |
+| status        | smallint     |
+
+Indexes
+
+* lesson_id
+* resource_type
+* status
+
+GIN Index
+
+metadata
+
+body
+
+---
+
+# 7. Assessment Module
+
+## assessments
+
+FK
+
+lesson_id
+
+---
+
+## questions
+
+FK
+
+assessment_id
+
+---
+
+## choices
+
+FK
+
+question_id
+
+---
+
+## rubrics
+
+FK
+
+assessment_id
+
+---
+
+# 8. AI Module
+
+## generation_jobs
+
+| Column      | Type          |
+| ----------- | ------------- |
+| id          | UUID          |
+| user_id     | UUID          |
+| provider    | varchar(100)  |
+| model       | varchar(100)  |
+| prompt      | jsonb         |
+| response    | jsonb         |
+| token_usage | integer       |
+| cost        | numeric(12,4) |
+| status      | smallint      |
+
+Indexes
+
+* user_id
+* status
+* created_at
+
+GIN
+
+prompt
+
+response
+
+---
+
+# 9. Template Module
+
+## templates
+
+| Column   | Type         |
+| -------- | ------------ |
+| id       | UUID         |
+| category | varchar(100) |
+| title    | varchar(255) |
+| schema   | jsonb        |
+| version  | integer      |
+
+---
+
+# 10. Plugin Module
+
+## plugins
+
+| Column        | Type         |
+| ------------- | ------------ |
+| id            | UUID         |
+| name          | varchar(150) |
+| version       | varchar(30)  |
+| manifest      | jsonb        |
+| compatibility | jsonb        |
+
+---
+
+# 11. Workflow Module
+
+## workflow_states
+
+* id
+* code
+* name
+
+---
+
+## workflow_transitions
+
+* from_state_id
+* to_state_id
+* action
+
+---
+
+## approvals
+
+FK
+
+resource_id
+
+user_id
+
+---
+
+# 12. Audit Module
+
+## audit_logs
+
+| Column      | Type         |
+| ----------- | ------------ |
+| id          | UUID         |
+| actor_id    | UUID         |
+| entity_name | varchar(100) |
+| entity_id   | UUID         |
+| action      | varchar(50)  |
+| before_data | jsonb        |
+| after_data  | jsonb        |
+| created_at  | timestamptz  |
+
+Partition by Month (Future)
+
+---
+
+# 13. Foreign Key Summary
+
+```text
+organizations
+    │
+    ├── schools
+    │      └── departments
+    │
+    ├── users
+    │      └── user_roles
+    │
+    └── courses
+           └── units
+                  └── lessons
+                         ├── resources
+                         ├── assessments
+                         │      ├── questions
+                         │      │      └── choices
+                         │      └── rubrics
+                         │
+                         └── generation_jobs
+```
+
+---
+
+# 14. Index Strategy
+
+Primary Index
+
+* ทุก Primary Key
+
+Secondary Index
+
+* ทุก Foreign Key
+* created_at
+* updated_at
+* status
+
+Composite Index
+
+* (organization_id, status)
+* (course_id, sequence)
+* (unit_id, sequence)
+* (lesson_id, version)
+
+GIN Index
+
+* JSONB
+* Full Text Search
+
+---
+
+# 15. Constraint Rules
+
+* ทุก Foreign Key ใช้ `ON DELETE RESTRICT` สำหรับข้อมูลธุรกิจหลัก
+* ตารางเชื่อม (Junction Tables) ใช้ Composite Primary Key
+* ใช้ CHECK Constraint สำหรับค่าที่ต้องอยู่ในช่วงที่กำหนด เช่น version >= 1
+* ใช้ UNIQUE Constraint กับรหัส (code), slug และลำดับ (sequence) ภายในขอบเขตเดียวกัน
+
+---
+
+# 16. Physical Database Standards
+
+* Primary Key: UUID
+* Timestamp: `timestamptz`
+* Text Search: PostgreSQL Full Text Search
+* Flexible Data: `jsonb`
+* Soft Delete: `deleted_at`
+* Character Encoding: UTF-8
+* Time Zone: UTC
+
+---
+
+# 17. Evolution Strategy
+
+ระยะที่ 1 (MVP)
+
+* Single PostgreSQL Database
+* Django ORM
+* Shared Schema
+
+ระยะที่ 2
+
+* Logical Schema Separation
+* Read Replica
+
+ระยะที่ 3
+
+* Database Partitioning
+* Analytics Database
+* Data Warehouse
+* Event Streaming
