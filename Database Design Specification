@@ -1,0 +1,601 @@
+# Database Design Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Database:** PostgreSQL 16+
+**ORM:** Django ORM
+**Migration Tool:** Django Migrations
+
+---
+
+# 1. Purpose
+
+เอกสารนี้กำหนดโครงสร้างฐานข้อมูลของ ECOS ครอบคลุม
+
+* Logical Data Model
+* Entity Relationship Diagram (ERD)
+* Physical Schema
+* Naming Convention
+* Index Strategy
+* Constraints
+* Migration Strategy
+* Versioning
+* Audit
+* Backup & Recovery
+
+---
+
+# 2. Database Architecture
+
+```text
+                    PostgreSQL
+
+            ┌────────────────────┐
+            │ Identity           │
+            │ Organization       │
+            │ Curriculum         │
+            │ Content            │
+            │ Assessment         │
+            │ AI Studio          │
+            │ Marketplace        │
+            │ Plugin             │
+            │ Analytics          │
+            │ Foundation         │
+            └────────────────────┘
+```
+
+ใช้ **Single Database, Modular Schema** ในช่วง MVP และสามารถแยกฐานข้อมูลในอนาคตได้
+
+---
+
+# 3. Logical ERD
+
+```text
+Organization
+    │
+    ├── Users
+    │
+    ├── Courses
+    │      │
+    │      ├── Units
+    │      │      │
+    │      │      ├── Lessons
+    │      │      │      │
+    │      │      │      ├── Resources
+    │      │      │      ├── Assessments
+    │      │      │      └── AI Jobs
+    │      │
+    │      └── Competencies
+    │
+    ├── Templates
+    ├── Plugins
+    └── Workflow
+```
+
+---
+
+# 4. Database Schemas
+
+แยกตาม Domain เพื่อให้จัดการง่าย
+
+```text
+identity
+organization
+curriculum
+content
+assessment
+ai
+marketplace
+plugin
+analytics
+foundation
+audit
+```
+
+สำหรับ Django MVP สามารถใช้ Table Prefix แทน PostgreSQL Schema แล้วค่อยย้ายภายหลัง
+
+---
+
+# 5. Core Tables
+
+## Identity
+
+### users
+
+| Field         | Type         |
+| ------------- | ------------ |
+| id            | UUID         |
+| email         | varchar(255) |
+| username      | varchar(150) |
+| password_hash | text         |
+| is_active     | boolean      |
+| created_at    | timestamptz  |
+
+---
+
+### roles
+
+* id
+* name
+* description
+
+---
+
+### permissions
+
+* id
+* code
+* description
+
+---
+
+## Organization
+
+### organizations
+
+* id
+* name
+* slug
+* timezone
+* language
+
+---
+
+### schools
+
+* id
+* organization_id
+* name
+* code
+
+---
+
+### departments
+
+* id
+* school_id
+* name
+
+---
+
+## Curriculum
+
+### courses
+
+* id
+* organization_id
+* code
+* title
+* description
+* academic_year
+* status
+
+---
+
+### units
+
+* id
+* course_id
+* title
+* sequence
+
+---
+
+### lessons
+
+* id
+* unit_id
+* title
+* lesson_type
+* duration
+* objective
+
+---
+
+## Content
+
+### resources
+
+ใช้ Single Table พร้อมชนิดข้อมูล
+
+| Field         | Type    |
+| ------------- | ------- |
+| id            | UUID    |
+| lesson_id     | UUID    |
+| resource_type | enum    |
+| title         | varchar |
+| body          | jsonb   |
+| metadata      | jsonb   |
+| version       | integer |
+| status        | enum    |
+
+---
+
+## Assessment
+
+### assessments
+
+* id
+* lesson_id
+* title
+* assessment_type
+
+---
+
+### questions
+
+* id
+* assessment_id
+* type
+* content
+* answer_key
+
+---
+
+### rubrics
+
+* id
+* assessment_id
+* title
+
+---
+
+## AI
+
+### generation_jobs
+
+* id
+* user_id
+* provider
+* model
+* prompt
+* result
+* status
+* token_usage
+* cost
+* created_at
+
+---
+
+## Template
+
+### templates
+
+* id
+* title
+* category
+* version
+* schema
+* visibility
+
+---
+
+## Plugin
+
+### plugins
+
+* id
+* name
+* version
+* manifest
+* compatibility
+
+---
+
+# 6. Relationship Rules
+
+```
+Organization
+   1 ────── N Users
+
+Organization
+   1 ────── N Courses
+
+Course
+   1 ────── N Units
+
+Unit
+   1 ────── N Lessons
+
+Lesson
+   1 ────── N Resources
+
+Lesson
+   1 ────── N Assessments
+
+Assessment
+   1 ────── N Questions
+
+Lesson
+   1 ────── N AI Jobs
+```
+
+---
+
+# 7. Naming Convention
+
+Tables
+
+snake_case
+
+ตัวอย่าง
+
+```
+course_lessons
+generation_jobs
+workflow_states
+```
+
+Columns
+
+snake_case
+
+Primary Key
+
+```
+id UUID
+```
+
+Foreign Key
+
+```
+course_id
+
+lesson_id
+
+user_id
+```
+
+---
+
+# 8. Primary Key Strategy
+
+ทุกตารางใช้
+
+```
+UUID
+```
+
+ข้อดี
+
+* Distributed Ready
+* Plugin Friendly
+* API Friendly
+
+---
+
+# 9. Audit Columns
+
+ทุกตารางควรมี
+
+```
+created_at
+
+updated_at
+
+created_by
+
+updated_by
+
+deleted_at
+```
+
+รองรับ Soft Delete
+
+---
+
+# 10. Versioning Strategy
+
+Content
+
+```
+Resource
+
+↓
+
+Version 1
+
+↓
+
+Version 2
+
+↓
+
+Version 3
+```
+
+ไม่แก้ไข Published Version
+
+สร้าง Revision ใหม่
+
+---
+
+# 11. JSONB Usage
+
+ใช้ PostgreSQL JSONB สำหรับข้อมูลที่เปลี่ยนแปลงบ่อย เช่น
+
+* Metadata
+* Prompt
+* AI Result
+* Plugin Manifest
+* Rubric Schema
+
+---
+
+# 12. Index Strategy
+
+Index ทุก
+
+* Foreign Keys
+* created_at
+* updated_at
+* status
+* organization_id
+
+GIN Index
+
+ใช้กับ
+
+* JSONB
+* Full Text Search
+
+Composite Index
+
+ตัวอย่าง
+
+```
+organization_id + status
+
+lesson_id + version
+
+user_id + created_at
+```
+
+---
+
+# 13. Constraints
+
+Foreign Key
+
+CHECK
+
+UNIQUE
+
+NOT NULL
+
+ตัวอย่าง
+
+```
+lesson.sequence > 0
+
+version >= 1
+```
+
+---
+
+# 14. Migration Strategy
+
+ใช้
+
+Django Migration
+
+ทุกครั้ง
+
+```
+makemigrations
+
+↓
+
+review
+
+↓
+
+test
+
+↓
+
+deploy
+```
+
+ห้ามแก้ Migration เดิมหลัง Production
+
+---
+
+# 15. Seed Data
+
+สร้างข้อมูลเริ่มต้น
+
+* Roles
+* Permissions
+* Languages
+* Themes
+* Default Templates
+* Default Workflow
+
+---
+
+# 16. Backup Strategy
+
+Daily Backup
+
+Weekly Full Backup
+
+Point-in-Time Recovery
+
+Retention
+
+90 วัน
+
+---
+
+# 17. Performance Strategy
+
+Connection Pool
+
+Read Replica (Future)
+
+Materialized View
+
+Caching
+
+Partition (Analytics)
+
+---
+
+# 18. Security
+
+Encryption at Rest
+
+TLS
+
+Least Privilege
+
+Row-Level Security (Enterprise)
+
+Audit Log
+
+---
+
+# 19. Django Mapping
+
+ตัวอย่าง App
+
+```
+apps/
+
+accounts/
+
+organizations/
+
+curriculum/
+
+content/
+
+assessment/
+
+ai/
+
+plugins/
+
+marketplace/
+```
+
+แต่ละ App เป็นเจ้าของ Model ของตนเอง
+
+ห้าม Import Model ข้าม Domain โดยไม่ผ่าน Service Layer
+
+---
+
+# 20. Future Evolution
+
+รองรับการขยาย
+
+* Multi-Tenant
+* Multi-Database
+* Event Sourcing (บางโมดูล)
+* Read Replica
+* CQRS สำหรับ Analytics
+* Data Warehouse
+* Lakehouse Integration
+
+โดยไม่ต้องเปลี่ยน Domain Model หลัก
