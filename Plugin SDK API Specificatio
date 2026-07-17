@@ -1,0 +1,661 @@
+# Plugin SDK API Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Enterprise Platform Specification
+**Applies To:** Plugin Developers, Marketplace, Third-Party Integrations, Internal Extensions
+
+---
+
+# 1. Purpose
+
+Plugin SDK คือมาตรฐานสำหรับการพัฒนา Plugin บนแพลตฟอร์ม ECOS เพื่อให้สามารถขยายความสามารถของระบบได้โดยไม่ต้องแก้ไข Core Platform
+
+Plugin สามารถ
+
+* เพิ่มเครื่องมือ AI
+* เพิ่มประเภทใบงาน
+* เพิ่ม Template
+* เพิ่ม Workflow
+* เพิ่มการ Export
+* เชื่อมต่อระบบภายนอก
+* เพิ่ม Dashboard และ Analytics
+* เพิ่มบริการเฉพาะขององค์กร
+
+Plugin ทุกตัวต้องปฏิบัติตามข้อกำหนดในเอกสารนี้
+
+---
+
+# 2. Platform Architecture
+
+```text
+                 ECOS Platform
+
+      +--------------------------------+
+      |         Core Services          |
+      +--------------------------------+
+             ▲               ▲
+             │               │
+      Plugin Runtime    Event Bus
+             ▲               ▲
+             │               │
+     +-------+---------------+-------+
+     |                               |
+ AI Plugins                  Integration Plugins
+ Export Plugins              Analytics Plugins
+ Content Plugins             Workflow Plugins
+ UI Plugins                  Assessment Plugins
+```
+
+---
+
+# 3. Plugin Categories
+
+| Category          | Purpose                               |
+| ----------------- | ------------------------------------- |
+| AI Provider       | เชื่อมต่อ LLM หรือ AI Service         |
+| Content Generator | สร้างใบงาน ใบความรู้ สไลด์            |
+| Assessment        | สร้างข้อสอบ Rubric แบบประเมิน         |
+| Export            | DOCX PDF PPTX HTML SCORM              |
+| Template          | Template ใหม่                         |
+| Workflow          | Workflow ใหม่                         |
+| Analytics         | Dashboard รายงาน                      |
+| Integration       | Google Classroom Moodle Microsoft 365 |
+| Authentication    | Identity Provider เพิ่มเติม           |
+| UI Extension      | Dashboard Widget หน้า Admin           |
+
+---
+
+# 4. Plugin Lifecycle
+
+```text
+Install
+
+↓
+
+Validate
+
+↓
+
+Register
+
+↓
+
+Initialize
+
+↓
+
+Activate
+
+↓
+
+Running
+
+↓
+
+Update
+
+↓
+
+Deactivate
+
+↓
+
+Uninstall
+```
+
+---
+
+# 5. Plugin Directory Structure
+
+```text
+plugin/
+
+├── manifest.yaml
+├── plugin.py
+├── config.py
+├── requirements.txt
+├── permissions.yaml
+├── routes.py
+├── events.py
+├── hooks.py
+├── templates/
+├── static/
+├── locales/
+├── migrations/
+├── tests/
+└── README.md
+```
+
+---
+
+# 6. Plugin Manifest
+
+ทุก Plugin ต้องมี
+
+```yaml
+id: worksheet-ai
+
+name: AI Worksheet Generator
+
+version: 1.0.0
+
+sdk_version: 1.0
+
+author: Example
+
+license: MIT
+
+category: content-generator
+
+homepage: https://example.com
+
+permissions:
+
+- worksheet.generate
+
+- ai.generate
+
+events:
+
+- content.resource.created
+
+- ai.job.completed
+
+routes:
+
+- /generate
+
+dependencies:
+
+- ai-runtime
+
+minimum_platform: 1.0
+
+maximum_platform: 2.x
+```
+
+---
+
+# 7. Plugin Metadata
+
+Mandatory
+
+* id
+* name
+* version
+* sdk_version
+* category
+* author
+* license
+
+Optional
+
+* icon
+* homepage
+* documentation
+* support
+* keywords
+
+---
+
+# 8. Plugin Runtime
+
+Plugin ถูกเรียกผ่าน Runtime Layer
+
+```text
+Core
+
+↓
+
+Plugin Runtime
+
+↓
+
+Sandbox
+
+↓
+
+Plugin
+
+↓
+
+Response
+```
+
+Plugin ไม่สามารถเข้าถึง Database โดยตรง
+
+---
+
+# 9. Plugin API
+
+Plugin สื่อสารผ่าน SDK API เท่านั้น
+
+ตัวอย่าง
+
+```python
+sdk.logger.info()
+
+sdk.storage.save()
+
+sdk.ai.generate()
+
+sdk.events.publish()
+
+sdk.workflow.start()
+
+sdk.content.create()
+```
+
+ห้ามเรียก Internal Database หรือ Internal ORM ของ Core โดยตรง
+
+---
+
+# 10. SDK Modules
+
+SDK ประกอบด้วย
+
+```text
+sdk.auth
+
+sdk.content
+
+sdk.ai
+
+sdk.workflow
+
+sdk.storage
+
+sdk.events
+
+sdk.logging
+
+sdk.configuration
+
+sdk.notifications
+
+sdk.analytics
+```
+
+---
+
+# 11. Plugin Context
+
+ทุก Request
+
+Plugin จะได้รับ Context
+
+```json
+{
+  "organization_id": "...",
+  "user_id": "...",
+  "roles": [],
+  "permissions": [],
+  "locale": "th",
+  "request_id": "...",
+  "correlation_id": "..."
+}
+```
+
+---
+
+# 12. Hooks
+
+Lifecycle Hooks
+
+```text
+on_install()
+
+on_activate()
+
+on_deactivate()
+
+on_update()
+
+on_uninstall()
+```
+
+Runtime Hooks
+
+```text
+before_generate()
+
+after_generate()
+
+before_publish()
+
+after_publish()
+```
+
+---
+
+# 13. Event Subscription
+
+Plugin
+
+Subscribe
+
+```text
+content.resource.created
+
+lesson.published
+
+workflow.completed
+```
+
+Publish
+
+```text
+plugin.completed
+
+plugin.failed
+```
+
+---
+
+# 14. REST Endpoint Registration
+
+Plugin
+
+สามารถเพิ่ม API
+
+```text
+/api/plugins/<plugin-id>/*
+```
+
+ตัวอย่าง
+
+```text
+/api/plugins/worksheet-ai/generate
+```
+
+ทุก Endpoint ต้องมี OpenAPI Specification
+
+---
+
+# 15. UI Extension
+
+Plugin
+
+สามารถเพิ่ม
+
+Dashboard
+
+Sidebar
+
+Toolbar
+
+Widget
+
+Menu
+
+Page
+
+Modal
+
+Command Palette
+
+ผ่าน Extension Point ที่กำหนด
+
+---
+
+# 16. Permissions
+
+Plugin ต้องประกาศ
+
+```text
+worksheet.generate
+
+storage.write
+
+events.publish
+
+analytics.read
+```
+
+ระบบจะแสดงรายการสิทธิ์ให้ผู้ดูแลอนุมัติก่อนเปิดใช้งาน
+
+---
+
+# 17. Security
+
+Plugin
+
+ทำงานใน Sandbox
+
+ไม่สามารถ
+
+* อ่าน Database โดยตรง
+* อ่านไฟล์ระบบ
+* เปิด Socket ตามอำเภอใจ
+* Execute Shell
+* เข้าถึง Secret ของ Platform
+
+ยกเว้นได้รับสิทธิ์เฉพาะตามนโยบาย
+
+---
+
+# 18. Resource Limits
+
+กำหนดเพดานการใช้ทรัพยากร
+
+| Resource       | Default Limit         |
+| -------------- | --------------------- |
+| CPU            | กำหนดตาม Runtime      |
+| Memory         | กำหนดตาม Runtime      |
+| Execution Time | 30 วินาที             |
+| Storage        | กำหนดตามโควตาองค์กร   |
+| Network        | เฉพาะปลายทางที่อนุญาต |
+
+ค่าจริงสามารถปรับตามประเภท Plugin
+
+---
+
+# 19. Storage API
+
+Plugin ใช้
+
+```python
+sdk.storage.save()
+
+sdk.storage.load()
+
+sdk.storage.delete()
+```
+
+รองรับ
+
+* Object Storage
+* Temporary Storage
+* Secure Storage
+
+---
+
+# 20. Configuration API
+
+Plugin
+
+```python
+sdk.configuration.get()
+
+sdk.configuration.set()
+```
+
+Configuration แยกตาม
+
+* Platform
+* Organization
+* Plugin
+
+---
+
+# 21. AI API
+
+Plugin
+
+```python
+sdk.ai.generate()
+
+sdk.ai.chat()
+
+sdk.ai.embedding()
+```
+
+ไม่เรียก OpenAI หรือ Provider โดยตรง แต่ผ่าน AI Gateway ของ ECOS
+
+---
+
+# 22. Content API
+
+Plugin
+
+สามารถ
+
+* สร้างใบงาน
+* สร้างใบความรู้
+* สร้างแบบทดสอบ
+* เพิ่ม Resource ใหม่
+
+ผ่าน
+
+```python
+sdk.content.create()
+sdk.content.update()
+sdk.content.publish()
+```
+
+---
+
+# 23. Logging API
+
+ใช้
+
+```python
+sdk.logger.debug()
+
+sdk.logger.info()
+
+sdk.logger.warning()
+
+sdk.logger.error()
+```
+
+Log ทุกข้อความต้องมี
+
+* Plugin ID
+* Request ID
+* Correlation ID
+
+---
+
+# 24. Testing Standards
+
+ทุก Plugin ต้องผ่าน
+
+* Unit Test
+* Integration Test
+* SDK Compatibility Test
+* Security Scan
+* Manifest Validation
+* Contract Test
+* Performance Test
+
+ก่อนเผยแพร่ใน Marketplace
+
+---
+
+# 25. Version Compatibility
+
+ใช้ Semantic Versioning
+
+```text
+Platform 1.x
+
+รองรับ
+
+Plugin SDK 1.x
+```
+
+Plugin ต้องระบุช่วงเวอร์ชันที่รองรับใน Manifest
+
+---
+
+# 26. Marketplace Requirements
+
+Plugin ที่เผยแพร่ต้องมี
+
+* Manifest
+* Documentation
+* OpenAPI (หากมี API)
+* Event Contract
+* License
+* Changelog
+* Digital Signature
+* Security Scan Report
+
+---
+
+# 27. Deprecation Policy
+
+เมื่อ SDK มีการเปลี่ยนแปลง
+
+* ประกาศ Deprecation ล่วงหน้า
+* ระบุวันสิ้นสุดการสนับสนุน
+* จัดเตรียม Migration Guide
+* รักษาความเข้ากันได้ย้อนหลังในช่วงเวลาที่กำหนด
+
+---
+
+# 28. Governance
+
+Plugin ใหม่ต้องผ่าน
+
+* Manifest Review
+* Security Review
+* API Review
+* Performance Review
+* Compatibility Review
+* Marketplace Approval
+
+ก่อนเปิดใช้งานใน Production
+
+---
+
+# 29. SDK Lifecycle
+
+```text
+Design
+   ↓
+Develop
+   ↓
+Test
+   ↓
+Validate
+   ↓
+Publish
+   ↓
+Install
+   ↓
+Run
+   ↓
+Monitor
+   ↓
+Update
+```
+
+---
+
+# 30. Compliance Checklist
+
+Plugin ต้อง
+
+* ใช้ SDK API เท่านั้น
+* ไม่เข้าถึงฐานข้อมูลโดยตรง
+* ไม่เรียก Internal Service โดยตรง
+* ผ่าน Sandbox Runtime
+* ใช้ Event Contract มาตรฐาน
+* มี OpenAPI Specification สำหรับ Endpoint ที่เพิ่ม
+* ใช้ Authentication และ Authorization ของ Platform
+* ผ่าน Security Review
+* ผ่าน Compatibility Test
+* ลงทะเบียนใน Marketplace (หากเผยแพร่)
