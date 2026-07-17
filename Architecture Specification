@@ -1,0 +1,439 @@
+# AI Architecture Specification
+
+**Project:** ECOS – Educational Content Operating System (ECOS)
+**Version:** 1.0
+**Status:** Enterprise Architecture Specification
+**Applies To:** AI Platform, AI Gateway, Prompt Runtime, Agent Runtime, Knowledge Services, Plugin SDK
+
+---
+
+# 1. Purpose
+
+AI เป็นหัวใจของ ECOS และทำหน้าที่เป็นแพลตฟอร์มกลางสำหรับการสร้าง วิเคราะห์ และปรับปรุงสื่อการเรียนรู้
+
+AI Architecture นี้กำหนดมาตรฐานสำหรับ
+
+* AI Gateway
+* Prompt Runtime
+* Prompt Compiler
+* Knowledge Retrieval
+* Agent Runtime
+* Model Routing
+* AI Safety
+* Cost Management
+* AI Observability
+* AI Plugin Framework
+
+---
+
+# 2. AI Architecture Overview
+
+```text
+                    +----------------------+
+                    |      Web / API       |
+                    +----------+-----------+
+                               |
+                         AI Gateway API
+                               |
+       +-----------------------+----------------------+
+       |                      |                       |
+ Prompt Runtime        Knowledge Runtime      Agent Runtime
+       |                      |                       |
+ Prompt Compiler        Retrieval Engine      Multi-Agent Engine
+       |                      |                       |
+       +-----------+----------+-----------+-----------+
+                   |                      |
+            Model Router           AI Safety Engine
+                   |                      |
+      +------------+------------+---------+-----------+
+      |            |            |                     |
+   OpenAI      Gemini       Claude             Local Models
+```
+
+---
+
+# 3. AI Platform Components
+
+## AI Gateway
+
+หน้าที่
+
+* จุดเข้าใช้งาน AI เพียงจุดเดียว
+* Authentication
+* Authorization
+* Rate Limiting
+* Cost Tracking
+* Provider Routing
+* Retry
+* Logging
+* Observability
+
+ทุกคำขอ AI ต้องผ่าน AI Gateway
+
+---
+
+## Prompt Runtime
+
+หน้าที่
+
+* รับ Prompt
+* เติม Context
+* เติม Metadata
+* เติม User Context
+* เติม Curriculum Context
+* ส่งต่อ Prompt Compiler
+
+Prompt Runtime ไม่มี Logic เฉพาะโมเดล
+
+---
+
+## Prompt Compiler
+
+หน้าที่
+
+* รวม Prompt Template
+* Variables
+* Knowledge
+* Constraints
+* Persona
+* Output Schema
+
+ผลลัพธ์คือ Prompt ที่พร้อมส่งให้ LLM
+
+---
+
+## Knowledge Runtime
+
+ประกอบด้วย
+
+* Knowledge Index
+* Curriculum Repository
+* Template Repository
+* Best Practice Repository
+* AI Memory
+* Plugin Knowledge
+
+รองรับ Retrieval-Augmented Generation (RAG)
+
+---
+
+## Agent Runtime
+
+จัดการ AI Agents
+
+รองรับ
+
+* Lesson Agent
+* Worksheet Agent
+* Assessment Agent
+* Rubric Agent
+* Reviewer Agent
+* Translation Agent
+* Curriculum Agent
+
+Agent สื่อสารกันผ่าน Event และ Tool Calls
+
+---
+
+# 4. Model Router
+
+เลือกโมเดลอัตโนมัติตาม
+
+* งานที่ร้องขอ
+* คุณภาพที่ต้องการ
+* เวลาในการตอบ
+* ค่าใช้จ่าย
+* นโยบายองค์กร
+* ความพร้อมของ Provider
+
+รองรับ
+
+* OpenAI
+* Google Gemini
+* Anthropic Claude
+* Local LLM
+* ผู้ให้บริการเพิ่มเติมผ่าน Plugin
+
+---
+
+# 5. Prompt Architecture
+
+Prompt ประกอบด้วย
+
+```text
+System Prompt
+      +
+Policy Prompt
+      +
+Persona Prompt
+      +
+Knowledge Context
+      +
+Curriculum Context
+      +
+User Prompt
+      +
+Output Schema
+```
+
+Prompt ทุกชุดถูก Version และตรวจสอบย้อนกลับได้
+
+---
+
+# 6. Retrieval-Augmented Generation (RAG)
+
+แหล่งข้อมูลที่ค้นคืนได้
+
+* หลักสูตร
+* หน่วยการเรียน
+* บทเรียน
+* ใบความรู้
+* เทมเพลต
+* Rubric
+* มาตรฐานการเรียนรู้
+* เอกสารขององค์กร
+
+การค้นคืนข้อมูลต้องอ้างอิงสิทธิ์ของผู้ใช้ (Authorization-Aware Retrieval)
+
+---
+
+# 7. AI Workflow
+
+ตัวอย่างการสร้างใบงาน
+
+```text
+Teacher
+   ↓
+AI Gateway
+   ↓
+Prompt Runtime
+   ↓
+Knowledge Retrieval
+   ↓
+Prompt Compiler
+   ↓
+Model Router
+   ↓
+LLM
+   ↓
+AI Validator
+   ↓
+Renderer
+   ↓
+Worksheet
+```
+
+---
+
+# 8. AI Output Validation
+
+ผลลัพธ์ทุกครั้งต้องผ่าน
+
+* Schema Validation
+* JSON Validation
+* Content Policy Check
+* Prompt Injection Detection
+* Hallucination Risk Check (ตามนโยบายที่กำหนด)
+* Formatting Validation
+* Citation Validation (เมื่อมีการอ้างอิง)
+
+หากไม่ผ่าน ให้สร้างใหม่หรือส่งเข้าสู่กระบวนการตรวจสอบ
+
+---
+
+# 9. AI Safety
+
+AI Safety Layer ตรวจสอบ
+
+* Prompt Injection
+* Data Leakage
+* Unsafe Content
+* Toxic Content
+* Personally Identifiable Information (PII)
+* Model Abuse
+
+ทุกคำขอต้องผ่าน AI Safety ก่อนและหลังการเรียกโมเดล
+
+---
+
+# 10. AI Memory
+
+แบ่งเป็น
+
+* Conversation Memory
+* User Preference Memory
+* Organization Memory
+* Curriculum Memory
+* Agent Working Memory
+
+กำหนดนโยบายอายุข้อมูลและการลบตามข้อกำหนดด้านความเป็นส่วนตัว
+
+---
+
+# 11. AI Tools
+
+Agent สามารถเรียกใช้เครื่องมือผ่าน Tool Interface
+
+ตัวอย่าง
+
+* Content Generator
+* Assessment Generator
+* Search
+* Translation
+* Rendering
+* Export
+* Workflow
+* Plugin Tools
+
+Tool ทุกตัวต้องประกาศ Input/Output Schema
+
+---
+
+# 12. AI Plugin Framework
+
+Plugin สามารถเพิ่ม
+
+* AI Model
+* Prompt Template
+* Tool
+* Agent
+* Validator
+* Knowledge Source
+* Embedding Provider
+
+ผ่าน Plugin SDK
+
+---
+
+# 13. AI Cost Management
+
+บันทึก
+
+* Provider
+* Model
+* Input Tokens
+* Output Tokens
+* Latency
+* Cost
+* User
+* Organization
+
+รองรับ Budget และ Quota ระดับผู้ใช้และองค์กร
+
+---
+
+# 14. AI Observability
+
+ติดตาม
+
+* Token Usage
+* Cost
+* Latency
+* Error Rate
+* Retry Rate
+* Cache Hit Ratio
+* Success Rate
+* User Feedback
+
+รองรับ Dashboard และ Alert
+
+---
+
+# 15. AI Evaluation
+
+ประเมินผลลัพธ์ด้วย
+
+* Schema Compliance
+* Content Quality
+* Rubric Score
+* Factual Consistency
+* Language Quality
+* Readability
+* User Rating
+
+ผลการประเมินถูกจัดเก็บเพื่อปรับปรุง Prompt และ Workflow
+
+---
+
+# 16. AI Security
+
+ทุกคำขอ AI ต้อง
+
+* Authenticate
+* Authorize
+* Audit
+* Encrypt in Transit
+* Log พร้อม Correlation ID
+
+ข้อมูลที่ส่งให้โมเดลต้องผ่านนโยบายการเปิดเผยข้อมูลขององค์กร
+
+---
+
+# 17. AI Data Flow
+
+```text
+User
+   ↓
+AI Gateway
+   ↓
+Prompt Runtime
+   ↓
+Knowledge Runtime
+   ↓
+Prompt Compiler
+   ↓
+Model Router
+   ↓
+Provider
+   ↓
+Validator
+   ↓
+Renderer
+   ↓
+Storage
+```
+
+---
+
+# 18. AI Scalability
+
+รองรับ
+
+* Multi-Provider
+* Multi-Model
+* Horizontal Scaling
+* Queue-Based Processing
+* Async Generation
+* Streaming Responses
+* Batch Processing
+
+---
+
+# 19. AI Governance
+
+ทุก Prompt, Agent และ Model ต้องมี
+
+* Owner
+* Version
+* Review Status
+* Approval Record
+* Change History
+* Compatibility Matrix
+
+การเปลี่ยนแปลงต้องผ่าน Architecture Review
+
+---
+
+# 20. AI Compliance Checklist
+
+ก่อนเปิดใช้งานใน Production
+
+* Prompt ผ่านการทบทวน
+* Agent ลงทะเบียนใน Agent Registry
+* Model อยู่ในรายการที่อนุมัติ
+* เปิดใช้งาน AI Safety
+* เปิดใช้งาน Cost Tracking
+* เปิดใช้งาน Observability
+* ผ่าน Evaluation และ Regression Test
+* มี Rollback Plan
+* มี Documentation ครบถ้วน
