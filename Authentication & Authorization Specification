@@ -1,0 +1,533 @@
+# Authentication & Authorization Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Enterprise Security Architecture Specification
+**Applies To:** Web Application, REST API, Plugin SDK, CLI, Mobile, External Integrations
+
+---
+
+# 1. Purpose
+
+เอกสารนี้กำหนดมาตรฐานด้าน **Authentication (การพิสูจน์ตัวตน)** และ **Authorization (การกำหนดสิทธิ์)** ของ ECOS เพื่อให้ทุกบริการใช้กลไกเดียวกัน รองรับการขยายระบบในระดับ Enterprise และสามารถเชื่อมต่อกับระบบภายนอกได้อย่างปลอดภัย
+
+---
+
+# 2. Security Principles
+
+ECOS ยึดหลักการต่อไปนี้
+
+* Zero Trust Architecture
+* Least Privilege
+* Defense in Depth
+* Secure by Default
+* Identity First
+* Principle of Explicit Permission
+* Audit Everything
+
+---
+
+# 3. Identity Architecture
+
+```text
+                +--------------------+
+                | Identity Provider  |
+                | (ECOS Identity)    |
+                +----------+---------+
+                           |
+                     OAuth2 / OIDC
+                           |
+        +------------------+------------------+
+        |                  |                  |
+    Web Client         Mobile App        Plugin SDK
+        |                  |                  |
+        +------------------+------------------+
+                           |
+                     API Gateway
+                           |
+        +---------+--------+--------+---------+
+        |         |                 |         |
+ Curriculum   Content         AI Service   Analytics
+```
+
+---
+
+# 4. Authentication Methods
+
+รองรับหลายรูปแบบตามประเภทผู้ใช้งาน
+
+| Method                           | Purpose              |
+| -------------------------------- | -------------------- |
+| Username + Password              | ผู้ใช้ทั่วไป         |
+| OAuth2 Authorization Code + PKCE | Web / Mobile         |
+| OpenID Connect (OIDC)            | Single Sign-On       |
+| API Key                          | Server-to-Server     |
+| Client Credentials               | Machine Identity     |
+| Refresh Token                    | ต่ออายุ Access Token |
+
+---
+
+# 5. User Types
+
+| Type                   | Description              |
+| ---------------------- | ------------------------ |
+| Student                | นักเรียน                 |
+| Teacher                | ครู                      |
+| Department Head        | หัวหน้ากลุ่มสาระ         |
+| School Administrator   | ผู้ดูแลโรงเรียน          |
+| Platform Administrator | ผู้ดูแลระบบ              |
+| Plugin Service Account | บัญชีบริการสำหรับ Plugin |
+| External System        | ระบบภายนอก               |
+
+---
+
+# 6. Identity Model
+
+ผู้ใช้ทุกคนมีข้อมูลหลัก
+
+```text
+User
+ ├── Organization
+ ├── Roles
+ ├── Permissions
+ ├── Groups
+ ├── Claims
+ └── MFA Settings
+```
+
+---
+
+# 7. Authentication Flow
+
+## Web Application
+
+```text
+User
+   │
+   ▼
+Login
+   │
+   ▼
+Identity Service
+   │
+Validate Credentials
+   │
+Generate Access Token
+   │
+Generate Refresh Token
+   │
+Return Tokens
+```
+
+---
+
+## Token Refresh
+
+```text
+Refresh Token
+
+↓
+
+Validate
+
+↓
+
+Issue New Access Token
+
+↓
+
+Rotate Refresh Token
+```
+
+Refresh Token ต้องถูกเปลี่ยน (Rotate) ทุกครั้งที่ใช้งาน
+
+---
+
+# 8. Token Standards
+
+## Access Token
+
+* JWT
+* อายุไม่เกิน 15 นาที
+* ลงลายมือชื่อแบบ Asymmetric (RS256 หรือ ES256)
+
+Claims มาตรฐาน
+
+```json
+{
+  "sub": "user_uuid",
+  "iss": "ecos",
+  "aud": "ecos-api",
+  "exp": 1712345678,
+  "iat": 1712344778,
+  "scope": [
+    "course.read",
+    "lesson.write"
+  ],
+  "organization_id": "...",
+  "roles": [
+    "teacher"
+  ]
+}
+```
+
+---
+
+## Refresh Token
+
+* เก็บในฐานข้อมูลแบบ Hash
+* อายุไม่เกิน 30 วัน
+* ใช้งานได้เพียงครั้งเดียว (Single Use)
+* รองรับ Token Revocation
+
+---
+
+# 9. Session Management
+
+Web
+
+* HttpOnly Cookie
+* Secure Cookie
+* SameSite=Lax หรือ Strict ตามบริบท
+
+API
+
+* Bearer Token
+
+ไม่มีการเก็บ Session ฝั่ง Server สำหรับ REST API
+
+---
+
+# 10. Multi-Factor Authentication (MFA)
+
+รองรับ
+
+* TOTP (Authenticator App)
+* Email OTP
+* Recovery Codes
+
+MFA บังคับใช้สำหรับ
+
+* Platform Administrator
+* School Administrator
+
+และสามารถกำหนดนโยบายเพิ่มเติมตามองค์กร
+
+---
+
+# 11. Password Policy
+
+ขั้นต่ำ
+
+* 12 ตัวอักษร
+* ตัวพิมพ์ใหญ่
+* ตัวพิมพ์เล็ก
+* ตัวเลข
+* อักขระพิเศษ
+
+จัดเก็บด้วย
+
+* Argon2id (แนะนำ)
+* หรือ bcrypt (กรณีรองรับย้อนหลัง)
+
+ห้ามจัดเก็บ Password แบบ Plain Text
+
+---
+
+# 12. Authorization Model
+
+ใช้ **RBAC + ABAC**
+
+### RBAC (Role-Based Access Control)
+
+ตัวอย่าง
+
+Teacher
+
+* course.read
+* lesson.write
+* worksheet.generate
+
+Administrator
+
+* *
+
+---
+
+### ABAC (Attribute-Based Access Control)
+
+ตรวจสอบจาก
+
+* Organization
+* School
+* Department
+* Owner
+* Status
+* Workflow State
+* Time (ถ้ามีนโยบาย)
+
+ตัวอย่าง
+
+ครูสามารถแก้ไขบทเรียนได้เฉพาะที่อยู่ในโรงเรียนของตน และยังไม่ถูกเผยแพร่
+
+---
+
+# 13. Permission Model
+
+รูปแบบมาตรฐาน
+
+```text
+<resource>.<action>
+```
+
+ตัวอย่าง
+
+```text
+course.read
+course.create
+course.update
+course.delete
+
+lesson.read
+lesson.update
+
+worksheet.generate
+
+assessment.publish
+
+plugin.install
+
+system.admin
+```
+
+---
+
+# 14. Scope Standards
+
+OAuth Scope ใช้รูปแบบเดียวกับ Permission
+
+ตัวอย่าง
+
+```text
+course.read
+
+lesson.write
+
+ai.generate
+
+analytics.read
+```
+
+---
+
+# 15. Organization Isolation
+
+ทุก Request ต้องตรวจสอบ
+
+```text
+organization_id
+```
+
+ผู้ใช้จะไม่สามารถเข้าถึงข้อมูลขององค์กรอื่น เว้นแต่ได้รับสิทธิ์ระดับ Platform
+
+---
+
+# 16. Resource Ownership
+
+ทุก Resource ต้องมีเจ้าของ
+
+```text
+created_by
+
+organization_id
+```
+
+ใช้ตรวจสอบสิทธิ์เพิ่มเติมก่อนอนุญาตให้แก้ไขหรือลบข้อมูล
+
+---
+
+# 17. API Authentication
+
+ทุก API (ยกเว้น Public Endpoint)
+
+ต้องมี
+
+```http
+Authorization: Bearer <access_token>
+```
+
+รองรับ
+
+* OAuth2
+* OIDC
+* API Key (สำหรับ Integration)
+
+---
+
+# 18. Service-to-Service Authentication
+
+ใช้
+
+* OAuth2 Client Credentials
+* Mutual TLS (mTLS) สำหรับสภาพแวดล้อมที่ต้องการความปลอดภัยสูง
+* Signed JWT สำหรับบริการภายใน (ตามความเหมาะสม)
+
+ห้ามใช้ Shared Secret ร่วมกันหลายบริการ
+
+---
+
+# 19. Plugin Authentication
+
+Plugin ทุกตัวต้อง
+
+* ลงทะเบียนกับระบบ
+* มี Client ID
+* มี Client Secret หรือ Public Key ตามรูปแบบการยืนยันตัวตน
+* ขอ Access Token ผ่านมาตรฐานที่กำหนด
+
+Plugin ถูกกำหนด Scope แยกจากผู้ใช้
+
+---
+
+# 20. Audit Logging
+
+บันทึกเหตุการณ์สำคัญ เช่น
+
+* Login
+* Logout
+* Password Change
+* MFA Enrollment
+* Token Revocation
+* Permission Change
+* Role Assignment
+* Access Denied
+
+ทุกเหตุการณ์ต้องมี
+
+* Actor
+* Timestamp
+* IP Address
+* User Agent
+* Correlation ID
+
+---
+
+# 21. Token Revocation
+
+รองรับ
+
+* Logout
+* Password Reset
+* Account Disabled
+* Role Change (เมื่อมีผลต่อสิทธิ์)
+* Security Incident
+
+ระบบต้องสามารถเพิกถอน Refresh Token และปฏิเสธ Access Token ตามนโยบายที่กำหนด
+
+---
+
+# 22. Rate Limiting
+
+กำหนดอัตราสูงสุดสำหรับ Endpoint สำคัญ
+
+| Endpoint         |           Default Limit |
+| ---------------- | ----------------------: |
+| Login            | 10 ครั้ง / 15 นาที / IP |
+| Password Reset   |       5 ครั้ง / ชั่วโมง |
+| MFA Verification |      10 ครั้ง / 15 นาที |
+| Token Refresh    |      60 ครั้ง / ชั่วโมง |
+
+---
+
+# 23. Account Protection
+
+รองรับ
+
+* Temporary Lockout
+* Progressive Backoff
+* CAPTCHA หลังพยายามเข้าสู่ระบบผิดหลายครั้ง
+* แจ้งเตือนเหตุการณ์ผิดปกติ
+
+---
+
+# 24. Security Headers
+
+Web Application ควรส่ง
+
+* Strict-Transport-Security
+* Content-Security-Policy
+* X-Content-Type-Options
+* Referrer-Policy
+* Permissions-Policy
+
+---
+
+# 25. Secrets Management
+
+ห้ามเก็บ
+
+* Password
+* API Key
+* Client Secret
+* Private Key
+
+ไว้ใน Source Code
+
+จัดเก็บในระบบบริหารจัดการความลับ (Secrets Manager) และหมุนเวียนตามนโยบายองค์กร
+
+---
+
+# 26. Compliance
+
+รองรับแนวปฏิบัติจาก
+
+* OAuth 2.1 (เมื่อประกาศใช้อย่างเป็นทางการ)
+* OpenID Connect 1.0
+* JWT (RFC 7519)
+* PKCE (RFC 7636)
+* OWASP ASVS
+* OWASP API Security Top 10
+
+---
+
+# 27. Authentication & Authorization Flow
+
+```text
+User
+   │
+   ▼
+Identity Service
+   │
+Authenticate
+   │
+Issue Tokens
+   │
+API Gateway
+   │
+Validate Token
+   │
+Resolve Roles
+   │
+Resolve Permissions
+   │
+Evaluate ABAC Policies
+   │
+Access Granted / Denied
+```
+
+---
+
+# 28. Security Compliance Checklist
+
+ก่อนเปิดใช้งานระบบ
+
+* ใช้ HTTPS ทุก Endpoint
+* เปิดใช้งาน MFA สำหรับผู้ดูแลระบบ
+* ใช้ JWT พร้อมอัลกอริทึมแบบ Asymmetric
+* ใช้ Argon2id หรือ bcrypt สำหรับ Password Hashing
+* เปิด Audit Logging
+* เปิด Token Revocation
+* กำหนด RBAC และ ABAC ครบถ้วน
+* แยกข้อมูลตาม Organization
+* จัดการ Secrets ผ่านระบบเฉพาะ
+* ทดสอบ Authentication และ Authorization ครบทุกกรณี
