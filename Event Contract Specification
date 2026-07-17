@@ -1,0 +1,448 @@
+# Event Contract Specification
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Enterprise Event Architecture Specification
+**Applies To:** Domain Events, Integration Events, Webhooks, Plugin SDK, Event Bus
+
+---
+
+# 1. Purpose
+
+เอกสารนี้กำหนดมาตรฐานของ **Event Contract** สำหรับ ECOS เพื่อให้ทุกโมดูล บริการ (Services) และ Plugin สามารถแลกเปลี่ยนเหตุการณ์ (Events) ได้อย่างเป็นมาตรฐาน มีความเข้ากันได้ (Compatibility) และรองรับการขยายระบบในอนาคต
+
+Event Contract เป็น "ข้อตกลง" ระหว่างผู้ส่งเหตุการณ์ (Publisher) และผู้รับเหตุการณ์ (Subscriber) โดยไม่ขึ้นกับภาษาโปรแกรมหรือสถาปัตยกรรมของแต่ละบริการ
+
+---
+
+# 2. Event Architecture Principles
+
+ECOS ใช้แนวคิด
+
+* Event-Driven Architecture (EDA)
+* Loose Coupling
+* Asynchronous Communication
+* Immutable Events
+* Event Versioning
+* At-Least-Once Delivery
+* Idempotent Consumers
+
+---
+
+# 3. Event Types
+
+แบ่งออกเป็น 4 ประเภท
+
+| Type               | Description                            |
+| ------------------ | -------------------------------------- |
+| Domain Event       | เหตุการณ์ภายใน Domain เดียวกัน         |
+| Integration Event  | เหตุการณ์ระหว่าง Services              |
+| System Event       | เหตุการณ์ของ Platform                  |
+| Notification Event | เหตุการณ์เพื่อแจ้งผู้ใช้หรือระบบภายนอก |
+
+---
+
+# 4. Event Flow
+
+```text id="eventflow"
+Teacher
+   │
+   ▼
+Lesson Service
+   │
+Lesson Published
+   │
+Event Bus
+   ├──────────────┐
+   │              │
+Content      Analytics
+Service        Service
+   │              │
+Notification Plugin SDK
+```
+
+---
+
+# 5. Event Naming Standards
+
+รูปแบบมาตรฐาน
+
+```text id="eventname"
+<domain>.<resource>.<action>
+```
+
+ตัวอย่าง
+
+```text id="eventexamples"
+curriculum.course.created
+
+curriculum.lesson.updated
+
+content.resource.published
+
+assessment.generated
+
+ai.job.completed
+
+workflow.state.changed
+
+plugin.installed
+
+system.started
+```
+
+ใช้ตัวพิมพ์เล็กและคั่นด้วยจุด (`.`)
+
+---
+
+# 6. Event Envelope
+
+ทุก Event ต้องมีโครงสร้างเดียวกัน
+
+```json id="eventenvelope"
+{
+  "event_id": "uuid",
+  "event_type": "curriculum.lesson.published",
+  "event_version": "1.0",
+  "occurred_at": "2026-07-17T12:00:00Z",
+  "source": "lesson-service",
+  "organization_id": "uuid",
+  "actor": {
+    "user_id": "uuid",
+    "role": "teacher"
+  },
+  "resource": {
+    "type": "lesson",
+    "id": "uuid",
+    "version": 5
+  },
+  "correlation_id": "uuid",
+  "causation_id": "uuid",
+  "payload": {}
+}
+```
+
+---
+
+# 7. Required Fields
+
+| Field           | Description                    |
+| --------------- | ------------------------------ |
+| event_id        | UUID ของ Event                 |
+| event_type      | ประเภทของ Event                |
+| event_version   | เวอร์ชันของ Event              |
+| occurred_at     | เวลาที่เกิดเหตุการณ์ (UTC)     |
+| source          | บริการต้นทาง                   |
+| organization_id | ขอบเขตขององค์กร                |
+| correlation_id  | ใช้ติดตาม Transaction เดียวกัน |
+| causation_id    | Event ที่เป็นต้นเหตุ           |
+| payload         | ข้อมูลเฉพาะของเหตุการณ์        |
+
+---
+
+# 8. Payload Standards
+
+Payload ต้องมีเฉพาะข้อมูลที่จำเป็น
+
+ตัวอย่าง
+
+```json id="payloadexample"
+{
+  "lesson_id": "uuid",
+  "title": "Newton's Laws",
+  "status": "published"
+}
+```
+
+ไม่ควรส่งข้อมูลขนาดใหญ่หรือข้อมูลที่สามารถดึงจาก Resource API ได้
+
+---
+
+# 9. Event Versioning
+
+ใช้ Semantic Versioning
+
+| Version | Meaning                          |
+| ------- | -------------------------------- |
+| Major   | เปลี่ยนแปลงที่ไม่เข้ากันย้อนหลัง |
+| Minor   | เพิ่มข้อมูลที่เข้ากันย้อนหลัง    |
+| Patch   | แก้ไขคำอธิบายหรือ Metadata       |
+
+Subscriber ต้องสามารถรองรับหลายเวอร์ชันในช่วงเปลี่ยนผ่าน
+
+---
+
+# 10. Delivery Guarantee
+
+มาตรฐานการส่ง
+
+* At-Least-Once Delivery
+
+ผู้รับต้องออกแบบให้รองรับ Event ซ้ำ (Idempotent)
+
+---
+
+# 11. Ordering
+
+ไม่รับประกันลำดับของ Event ระหว่าง Resource ต่างกัน
+
+สำหรับ Resource เดียวกัน ควรใช้
+
+* resource.version
+* occurred_at
+
+ในการตรวจสอบลำดับ
+
+---
+
+# 12. Idempotency
+
+ใช้ `event_id` เป็นกุญแจหลักในการตรวจจับ Event ซ้ำ
+
+Consumer ต้องไม่ประมวลผล Event เดิมมากกว่าหนึ่งครั้ง
+
+---
+
+# 13. Event Categories
+
+## Curriculum
+
+```text id="curriculumevents"
+curriculum.course.created
+curriculum.course.updated
+curriculum.unit.created
+curriculum.lesson.published
+```
+
+---
+
+## Content
+
+```text id="contentevents"
+content.resource.created
+content.resource.updated
+content.resource.archived
+```
+
+---
+
+## Assessment
+
+```text id="assessmentevents"
+assessment.created
+assessment.question.generated
+assessment.published
+```
+
+---
+
+## AI
+
+```text id="aievents"
+ai.job.created
+ai.job.started
+ai.job.completed
+ai.job.failed
+```
+
+---
+
+## Workflow
+
+```text id="workflowevents"
+workflow.started
+workflow.approved
+workflow.rejected
+workflow.completed
+```
+
+---
+
+## Plugin
+
+```text id="pluginevents"
+plugin.installed
+plugin.updated
+plugin.removed
+```
+
+---
+
+# 14. Event Bus
+
+Event Contract ไม่ผูกกับเทคโนโลยี
+
+รองรับ
+
+* Redis Streams
+* RabbitMQ
+* Apache Kafka
+* AWS EventBridge
+* Google Pub/Sub
+* Azure Service Bus
+
+ผ่าน Event Bus Abstraction ของ ECOS
+
+---
+
+# 15. Retry Policy
+
+หาก Consumer ล้มเหลว
+
+* Exponential Backoff
+* จำกัดจำนวนครั้งในการ Retry
+* ส่งไปยัง Dead Letter Queue (DLQ) หากยังล้มเหลว
+
+---
+
+# 16. Dead Letter Queue
+
+Event ที่ประมวลผลไม่ได้ต้องถูกเก็บไว้เพื่อ
+
+* วิเคราะห์
+* แก้ไข
+* ส่งใหม่ (Replay)
+
+ห้ามทิ้ง Event โดยไม่มีการบันทึก
+
+---
+
+# 17. Event Security
+
+ทุก Event ต้องมี
+
+* Authentication ของ Publisher
+* Authorization ของ Publisher
+* Integrity Verification (เช่น Digital Signature หรือ Message Authentication)
+* Encryption ระหว่างการส่งข้อมูลเมื่อเหมาะสม
+
+---
+
+# 18. Event Filtering
+
+Subscriber สามารถกรองจาก
+
+* event_type
+* organization_id
+* source
+* resource.type
+* resource.id
+
+เพื่อลดภาระในการประมวลผล
+
+---
+
+# 19. Event Retention
+
+ระยะเวลาการเก็บรักษาขึ้นกับประเภท
+
+| Event Type        | Suggested Retention |
+| ----------------- | ------------------: |
+| Domain Event      |              90 วัน |
+| Integration Event |             180 วัน |
+| Audit Event       |                7 ปี |
+| Analytics Event   |                2 ปี |
+
+องค์กรสามารถกำหนดนโยบายเพิ่มเติมได้
+
+---
+
+# 20. Event Observability
+
+ทุก Event ต้องสามารถติดตามได้ผ่าน
+
+* Event ID
+* Correlation ID
+* Causation ID
+* Trace ID
+* Structured Logs
+* Metrics
+
+เพื่อรองรับการตรวจสอบและแก้ไขปัญหา
+
+---
+
+# 21. Webhook Mapping
+
+Event เดียวกันสามารถเผยแพร่ผ่าน Webhook ได้
+
+ตัวอย่าง
+
+```text id="webhookmapping"
+content.resource.published
+
+↓
+
+Webhook
+
+resource.published
+```
+
+โดยใช้ Event Contract เดียวกันเป็นพื้นฐาน
+
+---
+
+# 22. Event Registry
+
+ทุก Event ต้องลงทะเบียนใน Event Registry
+
+ข้อมูลที่ต้องมี
+
+* Event Name
+* Version
+* Owner
+* Producer
+* Consumer
+* Payload Schema
+* Lifecycle
+* Documentation
+
+---
+
+# 23. Testing Standards
+
+ทุก Event ต้องมี
+
+* Schema Validation Test
+* Producer Contract Test
+* Consumer Contract Test
+* Compatibility Test
+* Replay Test
+* Performance Test
+
+---
+
+# 24. Event Lifecycle
+
+```text id="eventlifecycle"
+Design
+   ↓
+Schema Review
+   ↓
+Event Registry
+   ↓
+Producer Development
+   ↓
+Consumer Development
+   ↓
+Contract Testing
+   ↓
+Deployment
+   ↓
+Monitoring
+```
+
+---
+
+# 25. Governance
+
+การเพิ่มหรือเปลี่ยนแปลง Event ต้อง
+
+* กำหนด Event Schema
+* ระบุ Version
+* ผ่าน Architecture Review
+* ลงทะเบียนใน Event Registry
+* อัปเดต OpenAPI/Webhook Documentation (หากเกี่ยวข้อง)
+* ผ่าน Contract Test และ Compatibility Test
+
+ห้ามเผยแพร่ Event ใหม่เข้าสู่ Production หากยังไม่มี Event Contract ที่ได้รับการอนุมัติ
