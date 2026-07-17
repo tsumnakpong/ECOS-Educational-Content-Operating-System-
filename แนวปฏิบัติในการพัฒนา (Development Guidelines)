@@ -1,0 +1,599 @@
+# ECOS Development Principles & Engineering Practices
+
+## แนวปฏิบัติในการพัฒนา (Development Guidelines)
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 1.0
+**Status:** Engineering Standard
+
+---
+
+# 1. วัตถุประสงค์
+
+เอกสารนี้กำหนดแนวปฏิบัติ (Engineering Practices) สำหรับทีมพัฒนา ECOS เพื่อให้ทุกคนพัฒนาระบบด้วยมาตรฐานเดียวกัน มีคุณภาพสูง สามารถดูแลรักษาและขยายระบบได้ในระยะยาว
+
+แนวปฏิบัตินี้ใช้กับ
+
+* Backend
+* Frontend
+* AI Platform
+* Plugin Development
+* DevOps
+* QA
+* Documentation
+
+---
+
+# 2. Engineering Principles
+
+ทีมพัฒนาทุกคนต้องยึดหลักดังต่อไปนี้
+
+## 2.1 Architecture First
+
+* เริ่มจาก Architecture ก่อนเสมอ
+* ห้ามเขียนโค้ดก่อนออกแบบ
+* ทุก Feature ต้องสอดคล้องกับ Architecture Repository
+
+---
+
+## 2.2 API Contract First
+
+* ออกแบบ OpenAPI ก่อน
+* Frontend และ Backend อ้างอิง Contract เดียวกัน
+* ห้ามแก้ API โดยไม่มีการอัปเดต Contract
+
+---
+
+## 2.3 Domain First
+
+Business Logic
+
+อยู่ใน Domain
+
+ไม่อยู่ใน
+
+* View
+* Controller
+* Serializer
+* UI
+
+---
+
+## 2.4 Documentation First
+
+ก่อนเริ่ม Feature
+
+ต้องมี
+
+* Requirement
+* Design
+* API
+* Database
+* ADR (ถ้าจำเป็น)
+
+Documentation คือส่วนหนึ่งของระบบ ไม่ใช่งานหลังสุด
+
+---
+
+# 3. Coding Principles
+
+ทุกคนต้องปฏิบัติตาม
+
+* SOLID
+* DRY
+* KISS
+* YAGNI
+* Clean Code
+* Composition over Inheritance
+* Explicit is Better than Implicit
+
+---
+
+# 4. Feature Development Workflow
+
+```text
+Business Requirement
+
+↓
+
+Architecture Review
+
+↓
+
+API Design
+
+↓
+
+Database Design
+
+↓
+
+Implementation
+
+↓
+
+Testing
+
+↓
+
+Code Review
+
+↓
+
+Merge
+
+↓
+
+Deploy
+```
+
+ห้ามข้ามขั้นตอน
+
+---
+
+# 5. การแบ่งงาน
+
+Feature หนึ่งแบ่งเป็น
+
+* Requirement
+* Database
+* API
+* Backend
+* Frontend
+* AI
+* Testing
+* Documentation
+
+ทุกส่วนต้องเสร็จพร้อมกัน
+
+---
+
+# 6. Definition of Ready (DoR)
+
+ก่อนเริ่มพัฒนา
+
+Feature ต้องมี
+
+* Requirement ชัดเจน
+* User Story
+* Acceptance Criteria
+* API Design
+* Database Design
+* UX/UI (ถ้ามี)
+
+หากไม่ครบ
+
+ไม่เริ่มพัฒนา
+
+---
+
+# 7. Definition of Done (DoD)
+
+Feature ถือว่าเสร็จเมื่อ
+
+* เขียนโค้ดเสร็จ
+* Unit Test ผ่าน
+* Integration Test ผ่าน
+* API Contract ผ่าน
+* Documentation อัปเดต
+* Code Review ผ่าน
+* Deploy Staging สำเร็จ
+
+---
+
+# 8. Code Organization
+
+ทุก Module
+
+แบ่งเป็น
+
+```text
+Presentation
+
+↓
+
+Application
+
+↓
+
+Domain
+
+↓
+
+Infrastructure
+```
+
+Business Logic
+
+อยู่เฉพาะ
+
+Application
+
+และ
+
+Domain
+
+---
+
+# 9. Business Logic Rules
+
+ห้าม
+
+Business Logic
+
+อยู่ใน
+
+* View
+* Serializer
+* Template
+* JavaScript
+
+Business Logic
+
+ต้องอยู่
+
+Service
+
+หรือ
+
+Domain Model
+
+---
+
+# 10. Reusability
+
+ก่อนเขียนโค้ดใหม่
+
+ต้องตรวจสอบว่า
+
+สามารถใช้
+
+* Utility
+* Component
+* Service
+* SDK
+* Plugin
+
+เดิมได้หรือไม่
+
+---
+
+# 11. Error Handling
+
+ทุก Exception
+
+ต้อง
+
+* Log
+* Handle
+* Return Standard Error
+
+ห้าม
+
+```python
+except:
+    pass
+```
+
+---
+
+# 12. Validation
+
+Validation
+
+แบ่งเป็น
+
+Input Validation
+
+↓
+
+Business Validation
+
+↓
+
+Database Validation
+
+Validation
+
+ต้องอยู่ใน Layer ที่เหมาะสม
+
+---
+
+# 13. Logging
+
+ทุก Request
+
+ต้องมี
+
+* Request ID
+* Correlation ID
+* User
+* Organization
+* Module
+
+ห้ามใช้ print() ใน Production
+
+---
+
+# 14. Configuration
+
+Configuration
+
+ต้องอยู่
+
+Environment Variables
+
+หรือ
+
+Configuration Service
+
+ห้าม Hardcode
+
+* API Keys
+* Passwords
+* Secrets
+
+---
+
+# 15. Database
+
+ทุก Table
+
+ต้องมี
+
+* UUID
+* created_at
+* updated_at
+* version
+* deleted_at
+
+Migration
+
+ต้องผ่าน Review
+
+---
+
+# 16. API
+
+ทุก Endpoint
+
+ต้องมี
+
+* Authentication
+* Authorization
+* Validation
+* OpenAPI
+* Example
+* Error Responses
+
+---
+
+# 17. Security
+
+ทุก Feature
+
+ต้องตรวจสอบ
+
+* Authentication
+* Authorization
+* Permission
+* Input Validation
+* Rate Limiting
+* Audit Log
+
+---
+
+# 18. AI Features
+
+ทุก Prompt
+
+ต้อง
+
+* Version
+* Owner
+* Evaluation
+* Cost Tracking
+
+Prompt
+
+ถือเป็น Source Code
+
+---
+
+# 19. Plugin Development
+
+Plugin
+
+ต้อง
+
+* ใช้ SDK
+* ไม่เข้าถึง Database
+* ไม่ใช้ Internal API
+
+Plugin
+
+ต้องผ่าน Security Review
+
+---
+
+# 20. Code Review
+
+Reviewer
+
+ตรวจสอบ
+
+* Architecture
+* Naming
+* Performance
+* Security
+* Testing
+* Documentation
+
+Reviewer
+
+มีสิทธิ์ Reject
+
+หากไม่ผ่านมาตรฐาน
+
+---
+
+# 21. Testing
+
+ทุก Feature
+
+ต้องมี
+
+* Unit Test
+* Integration Test
+* API Test
+
+Feature สำคัญ
+
+เพิ่ม
+
+* Load Test
+* Security Test
+
+---
+
+# 22. Documentation
+
+ทุก Feature
+
+ต้องอัปเดต
+
+* OpenAPI
+* Data Dictionary
+* Architecture
+* ADR (ถ้าจำเป็น)
+* User Guide
+
+---
+
+# 23. Performance
+
+ทุก Query
+
+ต้องตรวจสอบ
+
+* Index
+* Execution Plan
+* N+1 Query
+
+ทุก API
+
+ต้องมี SLA
+
+---
+
+# 24. Deployment
+
+Production
+
+Deploy
+
+ผ่าน
+
+CI/CD
+
+เท่านั้น
+
+ห้าม
+
+Manual Copy
+
+---
+
+# 25. Backward Compatibility
+
+Feature ใหม่
+
+ต้อง
+
+ไม่ทำให้
+
+API เดิม
+
+ใช้งานไม่ได้
+
+หากมี Breaking Change
+
+ต้อง
+
+* เพิ่ม Version
+* Migration Guide
+* Deprecation Policy
+
+---
+
+# 26. Security by Design
+
+ทุก Feature
+
+ต้องออกแบบ
+
+Security
+
+ตั้งแต่วันแรก
+
+ไม่ใช่เพิ่มภายหลัง
+
+---
+
+# 27. Quality Gates
+
+ก่อน Merge
+
+ต้องผ่าน
+
+* Lint
+* Static Analysis
+* Unit Test
+* Integration Test
+* Security Scan
+* Dependency Scan
+* Code Review
+
+---
+
+# 28. Continuous Improvement
+
+ทีมพัฒนา
+
+จัดทำ
+
+* Sprint Retrospective
+* Architecture Review
+* Performance Review
+* Security Review
+
+อย่างสม่ำเสมอ
+
+---
+
+# 29. Engineering Culture
+
+ทีม ECOS ยึดหลัก
+
+* คุณภาพมาก่อนความเร็ว
+* ออกแบบก่อนลงมือ
+* เขียนให้อ่านง่ายกว่าฉลาด
+* ทดสอบก่อนปล่อยใช้งาน
+* เอกสารคือส่วนหนึ่งของผลิตภัณฑ์
+* ใช้มาตรฐานเดียวกันทั้งทีม
+* ปรับปรุงอย่างต่อเนื่องจากข้อมูลและผลลัพธ์จริง
+
+---
+
+# 30. Golden Rules
+
+1. Architecture ก่อน Code
+2. API Contract ก่อน Implementation
+3. Documentation คือ Source of Truth
+4. Business Logic ต้องอยู่ใน Domain/Application Layer
+5. Test ทุก Feature
+6. Security เป็นความรับผิดชอบของทุกคน
+7. Automation แทน Manual เมื่อทำได้
+8. ทุกการเปลี่ยนแปลงต้องสามารถตรวจสอบย้อนหลังได้
+9. รักษา Backward Compatibility
+10. คุณภาพของระบบสำคัญกว่าความเร็วในการพัฒนา
