@@ -602,3 +602,39 @@ OpenAPI เป็นต้นทางของการสร้างเคร
 * Contract Test
 
 ห้ามเพิ่ม Endpoint เข้าสู่ระบบ Production หากยังไม่มีการกำหนด Contract และผ่านการทบทวนสถาปัตยกรรม
+
+---------------------------
+เอกสารนี้เป็น Specification ระดับนโยบาย (Policy) แต่สำหรับการพัฒนา ECOS จริง ผมแนะนำให้ต่อยอดเป็น API Architecture Repository ซึ่งจะประกอบด้วย
+api/
+
+├── openapi/
+│   ├── openapi.yaml
+│   ├── paths/
+│   ├── schemas/
+│   ├── parameters/
+│   ├── responses/
+│   ├── headers/
+│   ├── security/
+│   ├── webhooks/
+│   └── examples/
+│
+├── standards/
+│   ├── rest-api-standards.md
+│   ├── error-codes.md
+│   ├── pagination.md
+│   ├── versioning.md
+│   └── naming.md
+│
+├── contracts/
+│   ├── accounts/
+│   ├── curriculum/
+│   ├── content/
+│   ├── assessment/
+│   ├── ai/
+│   ├── plugins/
+│   └── analytics/
+│
+└── sdk/
+    ├── typescript/
+    ├── python/
+    └── plugin-sdk/
