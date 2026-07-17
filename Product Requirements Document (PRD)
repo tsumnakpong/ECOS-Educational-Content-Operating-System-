@@ -1,0 +1,318 @@
+# Product Requirements Document (PRD)
+
+**Project:** ECOS – Educational Content Operating System
+**Version:** 0.1 (Architecture Phase)
+**Status:** Draft
+**Owner:** ECOS Product Team
+
+---
+
+# 1. Product Overview
+
+ECOS (Educational Content Operating System) เป็นแพลตฟอร์ม AI สำหรับการออกแบบ สร้าง จัดการ ประเมิน และเผยแพร่สื่อการเรียนรู้แบบครบวงจร โดยรวมเครื่องมือสำหรับการพัฒนาหลักสูตร การสร้างบทเรียน การสร้างใบความรู้ ใบงาน แบบทดสอบ สไลด์ และทรัพยากรการเรียนรู้อื่น ๆ ไว้ในระบบเดียว
+
+ECOS รองรับการใช้งานทั้งในระดับครู โรงเรียน เครือข่ายสถานศึกษา และองค์กรด้านการศึกษา พร้อมสถาปัตยกรรมแบบ Plugin และ AI Gateway ที่สามารถเชื่อมต่อกับผู้ให้บริการ AI หลายรายได้
+
+---
+
+# 2. Product Vision
+
+ช่วยให้ครูทุกคนสามารถสร้างสื่อการเรียนรู้คุณภาพสูงได้อย่างรวดเร็ว มีมาตรฐาน และสามารถนำไปใช้หรือเผยแพร่ได้ทันที โดยใช้ AI เป็นผู้ช่วยในการทำงาน ไม่ใช่เป็นผู้แทนการตัดสินใจของครู
+
+---
+
+# 3. Business Goals
+
+* ลดเวลาการสร้างสื่อการเรียนรู้
+* เพิ่มคุณภาพและความสม่ำเสมอของสื่อ
+* สนับสนุนการจัดการเรียนรู้ตามมาตรฐานสากล
+* รองรับการทำงานร่วมกันในระดับโรงเรียนและองค์กร
+* สร้างระบบนิเวศของ Template และ Plugin
+
+---
+
+# 4. Target Users
+
+## Primary Users
+
+* ครูผู้สอน
+* หัวหน้ากลุ่มสาระ
+* นักพัฒนาหลักสูตร
+* ผู้บริหารสถานศึกษา
+
+## Secondary Users
+
+* นักเรียน
+* ผู้ปกครอง
+* นักวิจัย
+* นักพัฒนาปลั๊กอิน
+* องค์กรด้านการศึกษา
+
+---
+
+# 5. Product Scope
+
+## In Scope
+
+### Curriculum Management
+
+* Course
+* Unit
+* Lesson
+* Learning Outcomes
+* Competencies
+
+### AI Content Generation
+
+* Lesson Plan
+* Knowledge Sheet
+* Worksheet
+* Activity Sheet
+* Assessment
+* Rubric
+* Presentation
+* Learning Images
+
+### Content Management
+
+* Versioning
+* Draft
+* Review
+* Publish
+* Archive
+
+### Export
+
+* DOCX
+* PDF
+* PPTX
+* HTML
+* Markdown
+
+### Collaboration
+
+* Team Workspace
+* Comments
+* Approval Workflow
+
+### Marketplace
+
+* Templates
+* Plugins
+* Subject Packs
+
+---
+
+## Out of Scope (MVP)
+
+* Student Information System (SIS)
+* Finance & Billing
+* Human Resource Management
+* Video Conferencing
+* Native Mobile Application
+
+---
+
+# 6. Functional Requirements
+
+## Authentication
+
+* Login
+* Logout
+* Password Reset
+* Multi-factor Authentication (Future)
+
+## User Management
+
+* User Profile
+* Roles
+* Permissions
+* Organization
+
+## Curriculum
+
+* Create Course
+* Create Unit
+* Create Lesson
+* Curriculum Mapping
+
+## AI Studio
+
+* Generate Lesson
+* Generate Worksheet
+* Generate Knowledge Sheet
+* Generate Assessment
+* Generate Rubric
+* Generate Slide
+
+## Template
+
+* Create Template
+* Clone Template
+* Share Template
+
+## Export
+
+* Export DOCX
+* Export PDF
+* Export PPTX
+
+## Plugin
+
+* Install
+* Update
+* Enable
+* Disable
+* Remove
+
+---
+
+# 7. Non-functional Requirements
+
+Performance
+
+* Dashboard โหลดภายใน 3 วินาที
+* สร้างเอกสารมาตรฐานภายใน 60 วินาที
+
+Scalability
+
+* รองรับหลายองค์กร (Multi-tenant)
+* รองรับการเพิ่ม Plugin โดยไม่กระทบระบบหลัก
+
+Security
+
+* OAuth2 / OpenID Connect
+* RBAC
+* Audit Log
+* Encryption สำหรับข้อมูลสำคัญ
+
+Reliability
+
+* ระบบพร้อมใช้งานสูง
+* สำรองข้อมูลและกู้คืนได้
+
+Maintainability
+
+* Modular Architecture
+* API-first
+* เอกสารประกอบครบถ้วน
+
+---
+
+# 8. User Roles
+
+Teacher
+
+* สร้างและแก้ไขสื่อ
+* ใช้งาน AI Studio
+* Export เอกสาร
+
+Department Head
+
+* ตรวจสอบและอนุมัติ
+* จัดการ Template ของกลุ่มสาระ
+
+School Administrator
+
+* จัดการผู้ใช้
+* จัดการองค์กร
+* กำหนดนโยบาย
+
+Platform Administrator
+
+* จัดการระบบ
+* จัดการ Plugin
+* ดูแล Marketplace
+
+Developer
+
+* พัฒนา Plugin
+* ใช้งาน SDK และ API
+
+---
+
+# 9. MVP Features (Version 0.1)
+
+* User Authentication
+* Dashboard
+* Course Management
+* Unit Management
+* Lesson Management
+* AI Studio (Worksheet Generator)
+* AI Studio (Knowledge Sheet Generator)
+* DOCX Export
+* PDF Export
+
+---
+
+# 10. Success Metrics
+
+Product Metrics
+
+* เวลาสร้างใบงานเฉลี่ย
+* จำนวนสื่อที่สร้างต่อวัน
+* อัตราการนำ Template กลับมาใช้ซ้ำ
+
+User Metrics
+
+* ผู้ใช้งานประจำรายเดือน
+* อัตราการใช้งาน AI Studio
+* ระดับความพึงพอใจของผู้ใช้
+
+Technical Metrics
+
+* API Response Time
+* AI Generation Time
+* Error Rate
+* System Availability
+
+---
+
+# 11. Assumptions
+
+* ผู้ใช้มีบัญชีในระบบ
+* ระบบเชื่อมต่อกับผู้ให้บริการ AI อย่างน้อยหนึ่งราย
+* มี Template พื้นฐานพร้อมใช้งาน
+* รองรับภาษาไทยเป็นลำดับแรก และสามารถขยายเป็นหลายภาษาได้
+
+---
+
+# 12. Constraints
+
+* ต้องสามารถทำงานร่วมกับ Django และ Django REST Framework
+* ต้องรองรับ PostgreSQL
+* ต้องสามารถเชื่อมต่อกับผู้ให้บริการ AI ได้หลายราย
+* ต้องรองรับการขยายผ่าน Plugin โดยไม่แก้ไข Core
+
+---
+
+# 13. Release Roadmap
+
+## Version 0.1
+
+Foundation + MVP
+
+## Version 0.5
+
+AI Studio
+
+## Version 1.0
+
+Marketplace + Plugin SDK
+
+## Version 2.0
+
+Enterprise Platform
+
+---
+
+# 14. Acceptance Criteria (MVP)
+
+ถือว่า MVP สำเร็จเมื่อผู้ใช้สามารถ
+
+1. สร้างรายวิชา หน่วย และบทเรียน
+2. สร้างใบงานด้วย AI
+3. แก้ไขผลลัพธ์ก่อนเผยแพร่
+4. ส่งออกเป็น DOCX และ PDF
+5. จัดเก็บผลงานไว้ในระบบ
+6. นำผลงานกลับมาแก้ไขได้ในภายหลัง
